@@ -1,0 +1,18 @@
+.div-hbusqueda{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    height: 40px;
+}
+
+.busqueda{
+    display: flex;
+    width: 80%;
+
+}
+
+.button-head{
+    margin-left: 30px;
+
+}
