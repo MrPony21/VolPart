@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getProducts } from '../api/api';
 import Pagination from '../components/Pagination';
 import ScannerInput from '../tools/ScannerInput';
@@ -17,6 +18,7 @@ const Inventory = () => {
   const [modalShow, setModalShow] = useState(false);
   const [modalProductoNoEncontrado, setModalProductoNoEncontrado] = useState(false)
 
+  const navigate = useNavigate()
   // Carga inicial
   useEffect(() => {
     getProducts()
@@ -51,6 +53,7 @@ const Inventory = () => {
       setModalProductoNoEncontrado(true)
       setProductoFiltrado(null)
     }
+    //ENCONTRAR SI EXISTE UNA MANERA DE CONFIGURAR EL SCANNER CON SUFIJO ENTER 
   }
 
 
@@ -129,7 +132,7 @@ const Inventory = () => {
               <td>{el.cantidad}</td>
               <td>{el.precio}</td>
               <td>
-                <button className="btn btn-outline-secondary">Ver</button>
+                <button className="btn btn-outline-secondary" onClick={() => navigate('/ProductoDetalle', {state: { producto: el}})}>Ver</button>
               </td>
             </tr>
           ))}

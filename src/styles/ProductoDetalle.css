@@ -1,0 +1,28 @@
+
+
+
+
+.modoEdicionInput{
+    background-color: #dfdfdf !important;
+}
+
+.tab-edicion{
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.tab-button{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.regresar-buttom{
+    height: 40px;
+}
+
+.button-edit-delete{
+    display: flex;
+   
+}
