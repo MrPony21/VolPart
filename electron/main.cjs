@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require("fs");
 const path = require('path');
 
@@ -46,4 +46,43 @@ ipcMain.handle("update-product", async (event, updatedProduct) => {
   }
 
   throw new Error("Producto no encontrado");
+});
+
+
+ipcMain.handle('select-image', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'png'] }]
+  });
+
+  if (result.canceled) return null;
+
+  const origen = result.filePaths[0];
+  const nombreArchivo = path.basename(origen);
+  const destino = path.join(__dirname, 'imagenes', nombreArchivo);
+
+  fs.copyFileSync(origen, destino);
+
+  return `imagenes/${nombreArchivo}`;
+});
+
+
+ipcMain.handle('create-product', async (event, nuevoProducto) => {
+  try {
+    // Leer el archivo actual
+    const data = fs.existsSync(dataPath)
+      ? JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+      : [];
+
+    // Agregar el nuevo producto
+    data.push(nuevoProducto);
+
+    // Guardar el archivo actualizado
+    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2), 'utf-8');
+
+    return nuevoProducto;
+  } catch (error) {
+    console.error("Error al guardar el producto:", error);
+    throw error;
+  }
 });

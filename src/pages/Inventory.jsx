@@ -17,6 +17,8 @@ const Inventory = () => {
 
   const [modalShow, setModalShow] = useState(false);
   const [modalProductoNoEncontrado, setModalProductoNoEncontrado] = useState(false)
+  const [filterField, setFilterField] = useState("codigo")
+  const [codigoToModal, setCodigoToModal] = useState("")
 
   const navigate = useNavigate()
   // Carga inicial
@@ -26,11 +28,24 @@ const Inventory = () => {
       .catch(err => console.error(err));
   }, []);
 
+  //Filtrar productos segun el select y input
+  const filteredProducts = useMemo(() => {
+    // Si no hay término, devolvemos todos
+    if (inputValue.trim() === "") {
+      return products;
+    }
+    const criterio = inputValue.trim().toLowerCase();
+    return products.filter(p => {
+      const valorCampo = String(p[filterField] ?? "").toLowerCase();
+      return valorCampo.includes(criterio);
+    });
+  }, [products, filterField, inputValue]);
+
   // Solo los productos de la página actual
   const displayed = useMemo(() => {
     const start = page * rowsPerPage;
-    return products.slice(start, start + rowsPerPage);
-  }, [products, page, rowsPerPage]);
+    return filteredProducts.slice(start, start + rowsPerPage);
+  }, [filteredProducts, page, rowsPerPage]);
 
   // Handlers de navegación
   const handleChangePage = (e, newPage) => setPage(newPage);
@@ -42,7 +57,7 @@ const Inventory = () => {
   const buscarProductoPorCodigo = (codigo) => {
     const codigoLimpio = codigo.trim()
     const producto = products.find(p => p.codigo === codigoLimpio)
-
+    console.log("entre",codigoLimpio)
 
     if (producto) {
       console.log("Se encontro", producto)
@@ -52,8 +67,14 @@ const Inventory = () => {
       console.log(`No se encontro producto ${codigo}`)
       setModalProductoNoEncontrado(true)
       setProductoFiltrado(null)
+      setCodigoToModal(codigo)
     }
     //ENCONTRAR SI EXISTE UNA MANERA DE CONFIGURAR EL SCANNER CON SUFIJO ENTER 
+  }
+
+  const buscaManual = () => {
+    setProductoFiltrado(null)
+    setPage(0)
   }
 
 
@@ -66,6 +87,10 @@ const Inventory = () => {
     setInputValue(event.target.value)
   }
 
+  const onChangeSelect = (e) => {
+    setFilterField(e.target.value);
+    setInputValue("")
+  }
 
   return (
     <>
@@ -75,20 +100,27 @@ const Inventory = () => {
           <input
             className="form-control mb-3"
             placeholder="Buscar"
-            style={{ width: "50%", height: "100%" }}
+            style={{ width: "40%", height: "100%" }}
             value={inputValue}
             onChange={handleOnChange}
-          // Puedes enlazar otro estado aquí para filtrar y recomputar displayedProducts
           />
-          <button type="button" class="btn btn-primary button-head" >Buscar</button>
+           <select class="form-select selectInventory"  id="selectInventory" value={filterField} onChange={onChangeSelect} >
+              <option value="codigo">Código</option>
+              <option value="nombre">Nombre</option>
+              <option value="marca">Marca</option>
+              <option value="cantidad">Cantidad</option>
+              <option value="precio">Precio</option>
+            </select>
+          
           <button type="button" class="btn btn-secondary button-head" 
           onClick={() => {
             setInputValue("") 
+            setFilterField("codigo")
             setProductoFiltrado(null)
             }} >Limpiar</button>
 
         </div>
-        <button type="button" class="btn btn-primary" style={{ height: "100%" }} onClick={() => setModalShow(true)} >Crear Producto</button>
+        <button type="button" class="btn btn-primary" style={{ height: "100%" }} onClick={() => navigate("/CrearProducto")} >Crear Producto</button>
 
 
       </div>
@@ -106,6 +138,7 @@ const Inventory = () => {
 
       <ProductoNoEncontrado 
         show={modalProductoNoEncontrado}
+        codigo={codigoToModal}
         onHide={() => setModalProductoNoEncontrado(false)}
       />
 
@@ -114,7 +147,7 @@ const Inventory = () => {
         <thead>
           <tr>
             <th>#</th>
-            <th>Codigo</th>
+            <th>Código</th>
             <th>Nombre</th>
             <th>Marca</th>
             <th>Cantidad</th>
@@ -141,7 +174,7 @@ const Inventory = () => {
 
       {/* Paginación */}
       <Pagination
-        count={products.length}
+        count={filteredProducts.length}
         page={page}
         rowsPerPage={rowsPerPage}
         onPageChange={handleChangePage}

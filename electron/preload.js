@@ -8,5 +8,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 contextBridge.exposeInMainWorld("api", {
   updateProduct: (product) => ipcRenderer.invoke("update-product", product),
-  getProducts: () => ipcRenderer.invoke("get-products")
+  getProducts: () => ipcRenderer.invoke("get-products"),
+  selectImage: () => ipcRenderer.invoke('select-image'),
+  createProduct: (nuevoProducto) => ipcRenderer.invoke('create-product', nuevoProducto)
 });

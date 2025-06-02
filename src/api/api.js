@@ -6,8 +6,8 @@ export async function getProducts(){
 }
 
 export async function createProduct(product) {
-    product.push(product)
-    return product
+    const productoNuevo = await window.api.createProduct(product)
+    return productoNuevo
 }
 
 export async function updateProduct(productoActualizado){
@@ -25,4 +25,10 @@ export async function updateProduct(productoActualizado){
     }catch(err){
         console.error("Ocurrio un error en la actualizacion del producto", error)
     }
+}
+
+
+export async function callSelectImage(){
+    const ruta = await window.api.selectImage();
+    return ruta
 }

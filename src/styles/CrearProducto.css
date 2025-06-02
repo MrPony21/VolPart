@@ -1,0 +1,15 @@
+
+.header-tab{
+    display: flex;
+    justify-content: space-between;
+}
+
+.footer-div{
+    display: flex; 
+    justify-content: space-between;  
+}
+
+
+.button-success{
+    margin-top: 10px
+}

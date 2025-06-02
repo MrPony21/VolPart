@@ -6,28 +6,30 @@ export default function ScannerInput({ onScan }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Si es TAB, procesar el buffer
+      // Evita escanear si estás escribiendo en un input
+      if (document.activeElement && document.activeElement.tagName === "INPUT") {
+        return;
+      }
+
       if (e.key === "Tab") {
-        e.preventDefault(); // Evita cambiar de foco
+        e.preventDefault();
         const code = bufferRef.current.trim();
         if (code !== "") {
-          onScan(code);
+          onScan(code); // ← Aquí entra SOLO lo escaneado
         }
-        bufferRef.current = ""; // Limpiar buffer después de escanear
+        bufferRef.current = "";
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         return;
       }
 
-      // Solo agregar caracteres imprimibles
       if (e.key.length === 1) {
         bufferRef.current += e.key;
       }
 
-      // Solo limpiar el buffer si no llegó TAB, sin disparar onScan
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        bufferRef.current = ""; // Limpieza silenciosa
-      }, 200);
+        bufferRef.current = "";
+      }, 200); // si esperas más de 200ms entre teclas, se resetea
     };
 
     window.addEventListener("keydown", handleKeyDown);
