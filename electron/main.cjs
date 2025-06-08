@@ -74,6 +74,13 @@ ipcMain.handle('create-product', async (event, nuevoProducto) => {
       ? JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
       : [];
 
+    const productoExiste = data.some(producto => producto.codigo === nuevoProducto.codigo)
+
+    if(productoExiste){
+      throw new Error(`Ya existe un producto con código ${nuevoProducto.codigo}`)
+    }
+
+
     // Agregar el nuevo producto
     data.push(nuevoProducto);
 
@@ -84,5 +91,38 @@ ipcMain.handle('create-product', async (event, nuevoProducto) => {
   } catch (error) {
     console.error("Error al guardar el producto:", error);
     throw error;
+  }
+});
+
+
+ipcMain.handle('exportar-inventario-json', async () => {
+  try {
+    // 1. Leer contenido actual del JSON
+    const productos = fs.existsSync(dataPath)
+      ? JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+      : [];
+
+    if (productos.length === 0) {
+      return { success: false, mensaje: 'No hay productos para exportar.' };
+    }
+
+    // 2. Diálogo para seleccionar ubicación de guardado
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      title: 'Guardar productos como...',
+      defaultPath: 'productos_exportados.json',
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, mensaje: 'Exportación cancelada por el usuario.' };
+    }
+
+    // 3. Guardar archivo en la ruta seleccionada
+    fs.writeFileSync(filePath, JSON.stringify(productos, null, 2), 'utf-8');
+
+    return { success: true, mensaje: 'Exportación exitosa.', ruta: filePath };
+  } catch (error) {
+    console.error('Error al exportar productos:', error);
+    return { success: false, mensaje: 'Error interno al exportar productos.' };
   }
 });

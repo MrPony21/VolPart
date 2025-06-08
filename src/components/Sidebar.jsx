@@ -91,7 +91,7 @@ const linksArray = [
   {
     label: "Reportes",
     icon: <FaceIcon />,
-    to: "/diagramas",
+    to: "/Reportes",
   },
 ];
 const secondarylinksArray = [

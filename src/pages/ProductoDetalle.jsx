@@ -18,6 +18,11 @@ const ProductoDetalle = () => {
     const [datos, setDatos] = useState({ ...producto })
     const [oldDatos, setOldDatos] = useState({ ...producto })
     const [actualizadoAlert, setActualizadoAlert] = useState(false)
+    //const [creadoAlert, setCreadoAlert] = useState(false)
+    const [error, setError] = useState("");
+
+
+    const creadoAlert = location.state?.productoCreado || false;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -31,8 +36,31 @@ const ProductoDetalle = () => {
         }
     }
 
+    const validarCampos = (producto) => {
+        if (!producto.nombre || !producto.marca || !producto.cantidad || !producto.precio) {
+            return "Todos los campos deben estar completos.";
+        }
+
+        if (isNaN(producto.cantidad) || parseInt(producto.cantidad) <= 0) {
+            return "La cantidad debe ser un número entero mayor a cero.";
+        }
+
+        if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
+            return "El precio debe ser un número mayor a cero.";
+        }
+
+        return null;
+    };
+
+
     const guardarCambios = async () => {
         console.log("Datos Actualizados", datos)
+
+        const mensajeValidacion = validarCampos(datos);
+        if (mensajeValidacion) {
+            setError(mensajeValidacion);
+            return;
+        }
 
         const productoCasteado = {
             ...datos,
@@ -50,7 +78,7 @@ const ProductoDetalle = () => {
             setActualizadoAlert(true)
         } catch (err) {
             console.error("Error al actualizar", err)
-            alert("No se ha podido actualizar el producto")
+            setError(err)
         }
     }
 
@@ -62,10 +90,20 @@ const ProductoDetalle = () => {
                     Se ha actualizado correctamente el producto.
                 </Alert>
             )}
-        
+            {creadoAlert && (
+                <Alert variant="filled" severity="success">
+                    Se ha creado correctamente el producto.
+                </Alert>
+            )}
+            {error && (
+                <Alert variant="filled" severity="error">
+                    {error}
+                </Alert>
+            )}
+                    
        
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div style={{ width: "50%" }}>
+                <div style={{ width: "100%" }}>
                     <div>
                         <label>Código:</label>
                         <input className={`form-control mb-2 modoEdicionInput`} value={datos.codigo} readOnly />
@@ -113,10 +151,10 @@ const ProductoDetalle = () => {
                         />
                     </div>
                 </div>
-                <div>
+                {/* <div>
                     <p>Imagen</p>
                     <div style={{ width: 400, height: 250, border: "1px solid #ccc", borderRadius: 10 }}></div>
-                </div>
+                </div> */}
             </div>
             <div style={{ marginTop: 20 }}>
                 {modoEdicion ? (
@@ -136,7 +174,7 @@ const ProductoDetalle = () => {
                             >Editar</button>
                             
                         </div>
-                        <button className="btn btn-primary regresar-buttom" onClick={() => navigate(-1)} >Regresar</button>
+                        <button className="btn btn-primary regresar-buttom" onClick={() => {creadoAlert ? navigate("/") : navigate(-1) } } >Regresar</button>
                     </div>
                 )}
 

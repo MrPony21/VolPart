@@ -32,3 +32,8 @@ export async function callSelectImage(){
     const ruta = await window.api.selectImage();
     return ruta
 }
+
+export async function exportarInventarioJSON(){
+    const ruta = await window.api.exportarInventarioEnJson();
+    return ruta
+}

@@ -1,0 +1,12 @@
+.panel-buttoms{
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.buttom-reporte{
+    width: 80%;
+}

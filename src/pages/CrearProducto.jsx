@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "../styles/CrearProducto.css"
 import { callSelectImage, createProduct } from '../api/api';
-
+import Alert from '@mui/material/Alert';
 
 const CrearProducto = () => {
     const location = useLocation()
     const navigate = useNavigate()
+    const [error, setError] = useState("")
 
     const codigo = location.state?.codigo
 
@@ -32,8 +33,31 @@ const CrearProducto = () => {
         }
     }
 
+    const validarCampos = (producto) => {
+        if (!producto.codigo || !producto.nombre || !producto.marca || !producto.cantidad || !producto.precio) {
+            return "Todos los campos deben estar completos.";
+        }
+
+        if (isNaN(producto.cantidad) || parseInt(producto.cantidad) <= 0) {
+            return "La cantidad debe ser un número entero mayor a cero.";
+        }
+
+        if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
+            return "El precio debe ser un número mayor a cero.";
+        }
+
+        return null; // todo está bien
+    };
+
+
+
     const crear = async () => {
 
+        const mensajeValidacion = validarCampos(productoNuevo);
+        if (mensajeValidacion) {
+            setError(mensajeValidacion);
+            return;
+        }   
 
         const productoCasteado = {
             ...productoNuevo,
@@ -45,8 +69,11 @@ const CrearProducto = () => {
         try{
             const productoCreado = await createProduct(productoCasteado)
             console.log("ProductoCreadoCorrectamente ", productoCreado)
+            navigate('/ProductoDetalle', {state: { producto: productoCreado, productoCreado: true} })
         }catch(err){
-            console.error("Ocurrio un error al crear su producto", err)
+            const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
+            setError(mensajeLimpio)
+            console.error("Ocurrio un error al crear su producto", err) 
         }
  
     }
@@ -61,6 +88,11 @@ const CrearProducto = () => {
                     <button className="btn btn-primary regresar-buttom" onClick={() => navigate("/")} >Regresar</button>
                 </div>
             </div>
+            {error && (
+                <Alert variant="filled" severity="error">
+                    {error}
+                </Alert>
+            )}
             <div>
                 <div>
                     <label>Codigó:</label>
@@ -83,8 +115,10 @@ const CrearProducto = () => {
                     <input className='form-control mb-2' value={productoNuevo.precio} name="precio" onChange={onChangeInput}></input>
                 </div>
             </div>
+
+            
             <div className="footer-div">
-                <div>
+                {/* <div>
                     <p>Imagen</p>
                     <div onClick={seleccionarImagen} style={{ width: 200, height: 150, border: "1px solid #ccc", borderRadius: 10 }}></div>
                 </div>
@@ -97,12 +131,14 @@ const CrearProducto = () => {
 
                 ) : (
                     <></>
-                )}
+                )} */}
+                <div></div>
 
                 <div className='button-success'>
                     <button className="btn btn-success " onClick={crear} >Crear</button>
                 </div>
             </div>
+            
         </div>
 
 
