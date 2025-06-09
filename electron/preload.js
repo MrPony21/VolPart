@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld("api", {
   getProducts: () => ipcRenderer.invoke("get-products"),
   selectImage: () => ipcRenderer.invoke('select-image'),
   createProduct: (nuevoProducto) => ipcRenderer.invoke('create-product', nuevoProducto),
-  exportarInventarioEnJson: ()  => ipcRenderer.invoke('exportar-inventario-json')
+  exportarInventarioEnJson: ()  => ipcRenderer.invoke('exportar-inventario-json'),
+  exportarInventarioEnExcel: () => ipcRenderer.invoke('exportar-excel-productos')
 });

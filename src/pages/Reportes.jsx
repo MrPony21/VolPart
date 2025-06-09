@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "../styles/Reportes.css"
-import { exportarInventarioJSON } from '../api/api';
+import { exportarInventarioJSON, exportarExcel } from '../api/api';
 import Alert from '@mui/material/Alert';
 
 
 const Reportes = () => {
     const[alertInventario, setAlertInventario] = useState("")
+    const[alertError, setAlertError] = useState("")
 
 
     const exportarInventarioFormatoCSV = async () => {
-
+        const response = await exportarExcel()
+        if (response.success) {
+            setAlertInventario(`Excel exportado correctamente a:\n${response.ruta}`);
+        } else {
+            setAlertError(response.mensaje);
+        }
     }
 
     const exportarInventarioFormatoJSON = async () => {
@@ -18,9 +24,11 @@ const Reportes = () => {
         if(response.success){
             setAlertInventario("Productos exportados correctamente")
         }else{
-            alert("No se ha podido exportar los productos")
+            setAlertError("No se ha podido exportar los productos")
         }
     }
+
+    
 
 
     return (
@@ -30,6 +38,11 @@ const Reportes = () => {
                 {alertInventario && (
                     <Alert variant="filled" severity="success">
                         {alertInventario}
+                    </Alert>
+                )}
+                {alertError && (
+                    <Alert variant="filled" severity="error">
+                        {alertError}
                     </Alert>
                 )}
                 <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick={exportarInventarioFormatoCSV} >Exportar Inventario Excel</button>

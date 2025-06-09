@@ -37,3 +37,8 @@ export async function exportarInventarioJSON(){
     const ruta = await window.api.exportarInventarioEnJson();
     return ruta
 }
+
+export const exportarExcel = async () => {
+    const response = await window.api.exportarInventarioEnExcel();
+    return response
+};

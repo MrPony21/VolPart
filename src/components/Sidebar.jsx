@@ -46,7 +46,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
           </NavLink>
         </div>
       ))}
-
+{/* 
       <div className="Themecontent">
         {sidebarOpen && <span className="titletheme">Dark mode</span>}
         <div className="Togglecontent">
@@ -66,7 +66,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </Container>
   );
 }
