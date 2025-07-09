@@ -6,17 +6,27 @@
   "build": {
     "appId": "com.tuempresa.miapp",
     "productName": "VolPart",
-    "icon": "assets/icon.ico",
-    "files": [
-      "electron/**/*",
-      "dist/**/*",
-      "package.json"
-    ],
     "directories": {
+      "output": "release",
       "buildResources": "assets"
     },
+    "files": [
+      "electron/**/*",
+      {
+        "from": "build",
+        "to": "app",
+        "filter": [
+          "**/*"
+        ]
+      },
+      "package.json"
+    ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "icon": "assets/icon.icns"
     }
   },
   "scripts": {

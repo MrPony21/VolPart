@@ -31,7 +31,7 @@ const ProductoNoEncontrado = ({ show, onHide, codigo }) => {
             </p>
           </div>
           <div className="actions">
-            <a className="read" href="#" onClick={() => navigate("/CrearProducto", {state: {codigo: codigo }})}>
+            <a className="read" onClick={() => navigate("/CrearProducto", {state: {codigo: codigo }})}>
               Registrar producto
             </a>
             <a

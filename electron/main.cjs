@@ -3,7 +3,7 @@ const fs = require("fs");
 const ExcelJS = require('exceljs');
 const path = require('path');
 
-const dataPath = path.resolve(__dirname, "../data.json");
+const dataPath = path.join(app.getPath('userData'), 'data.json');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -16,8 +16,14 @@ function createWindow() {
     }
   });
 
-  win.loadURL('http://localhost:5173');
+  if (app.isPackaged) {
+    win.loadFile(path.resolve(__dirname, '..', 'app', 'index.html'))
+  } else {
+    win.loadURL('http://localhost:5173')
+  }
+
 }
+
 
 app.whenReady().then(createWindow);
 

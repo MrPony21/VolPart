@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, HashRouter } from 'react-router-dom'
 import styled from 'styled-components';
 import AppRouter from './routes/routes'
 import { Sidebar } from './components/Sidebar'
@@ -20,17 +20,17 @@ function App() {
     <>
       <ThemeContext.Provider value={{ setTheme, theme }}>
         <ThemeProvider theme={themeStyle}>
-          <BrowserRouter>
+          <HashRouter>
             <Container className={sidebarOpen ? "sidebarState active" : ""}>
               <Sidebar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
               />
               <Content>
-                <AppRouter />
+                  <AppRouter />
               </Content>
             </Container>
-          </BrowserRouter>
+          </HashRouter>
         </ThemeProvider>
       </ThemeContext.Provider>
     </>

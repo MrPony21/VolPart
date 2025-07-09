@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom"; 
 import Inventory from "../pages/Inventory";
 import ProductoDetalle from "../pages/ProductoDetalle";
 import CrearProducto from "../pages/CrearProducto";
@@ -11,6 +11,7 @@ const AppRouter = () =>{
             <Route path="/ProductoDetalle" element={<ProductoDetalle/>}/>
             <Route path="/CrearProducto" element={<CrearProducto/>}></Route>
             <Route path="/Reportes" element={<Reportes/>}></Route>
+            <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     )
 
