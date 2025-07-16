@@ -42,3 +42,9 @@ export const exportarExcel = async () => {
     const response = await window.api.exportarInventarioEnExcel();
     return response
 };
+
+
+export async function importProduct(productos){
+    const response = await window.api.importarProductos(productos);
+    return response
+}

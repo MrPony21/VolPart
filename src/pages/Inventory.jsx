@@ -35,6 +35,7 @@ const Inventory = () => {
       return products;
     }
     const criterio = inputValue.trim().toLowerCase();
+    setPage(0)
     return products.filter(p => {
       const valorCampo = String(p[filterField] ?? "").toLowerCase();
       return valorCampo.includes(criterio);

@@ -3,6 +3,8 @@ import Inventory from "../pages/Inventory";
 import ProductoDetalle from "../pages/ProductoDetalle";
 import CrearProducto from "../pages/CrearProducto";
 import Reportes from "../pages/Reportes";
+import CargarArchivo from "../pages/CargarArchivo";
+import Ventas from "../pages/Ventas";
 
 const AppRouter = () =>{
     return(
@@ -10,7 +12,9 @@ const AppRouter = () =>{
             <Route path="/" element={<Inventory/>}/>
             <Route path="/ProductoDetalle" element={<ProductoDetalle/>}/>
             <Route path="/CrearProducto" element={<CrearProducto/>}></Route>
+            <Route path="/Ventas" element={<Ventas/>}></Route>
             <Route path="/Reportes" element={<Reportes/>}></Route>
+            <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     )

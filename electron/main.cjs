@@ -16,6 +16,8 @@ function createWindow() {
     }
   });
 
+  win.maximize(); 
+
   if (app.isPackaged) {
     win.loadFile(path.resolve(__dirname, '..', 'app', 'index.html'))
   } else {
@@ -220,5 +222,26 @@ ipcMain.handle('exportar-excel-productos', async () => {
   } catch (err) {
     console.error("Error al exportar Excel:", err);
     return { success: false, mensaje: 'Error al exportar a Excel.' };
+  }
+});
+
+
+// Importar productos desde un JSON y sobrescribir el archivo actual
+ipcMain.handle('importar-productos', async (event, productos) => {
+  try {
+    if (!Array.isArray(productos)) {
+      return { success: false, mensaje: 'El archivo no contiene un array de productos.' };
+    }
+    // Validación básica: cada producto debe tener al menos un código
+    for (const p of productos) {
+      if (!p.codigo) {
+        return { success: false, mensaje: 'Todos los productos deben tener un campo "codigo".' };
+      }
+    }
+    fs.writeFileSync(dataPath, JSON.stringify(productos, null, 2), 'utf-8');
+    return { success: true, mensaje: 'Productos importados correctamente.' };
+  } catch (error) {
+    console.error('Error al importar productos:', error);
+    return { success: false, mensaje: 'Error interno al importar productos.' };
   }
 });

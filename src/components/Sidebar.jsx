@@ -14,6 +14,8 @@ import { ThemeContext } from "../App";
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SellIcon from '@mui/icons-material/Sell';
 import FaceIcon from '@mui/icons-material/Face';
+import FileUploadIcon from '@mui/icons-material/FileUpload';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const ModSidebaropen = () => {
@@ -81,17 +83,22 @@ const linksArray = [
   {
     label: "Ventas",
     icon: <SellIcon />,
-    to: "/estadisticas",
+    to: "/Ventas",
   },
   {
     label: "Clientes",
-    icon: <AiOutlineApartment />,
+    icon: <FaceIcon />,
     to: "/productos",
   },
   {
     label: "Reportes",
-    icon: <FaceIcon />,
+    icon: <DescriptionIcon/>,
     to: "/Reportes",
+  },
+  {
+    label: "Importar Productos",
+    icon: <FileUploadIcon />,
+    to: "/CargarArchivo",
   },
 ];
 const secondarylinksArray = [
