@@ -4,6 +4,7 @@ const ExcelJS = require('exceljs');
 const path = require('path');
 
 const dataPath = path.join(app.getPath('userData'), 'data.json');
+const clientesPath = path.join(app.getPath('userData'), 'clientes.json');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -37,6 +38,8 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
+
+//#region Productos
 
 ipcMain.handle("get-products", async () => {
   const raw = fs.readFileSync(dataPath);
@@ -245,3 +248,54 @@ ipcMain.handle('importar-productos', async (event, productos) => {
     return { success: false, mensaje: 'Error interno al importar productos.' };
   }
 });
+//#endregion
+
+//#region Clientes
+
+ipcMain.handle('get-clientes', async () => {
+  if (!fs.existsSync(clientesPath)) return [];
+  const raw = fs.readFileSync(clientesPath);
+  return JSON.parse(raw);
+});
+
+ipcMain.handle('create-cliente', async (event, nuevoCliente) => {
+  try {
+    const data = fs.existsSync(clientesPath)
+      ? JSON.parse(fs.readFileSync(clientesPath, 'utf-8'))
+      : [];
+    const existe = data.some(c => c.nit === nuevoCliente.nit);
+    if (existe) {
+      throw new Error(`Ya existe un cliente con NIT ${nuevoCliente.nit}`);
+    }
+    data.push(nuevoCliente);
+    fs.writeFileSync(clientesPath, JSON.stringify(data, null, 2), 'utf-8');
+    return nuevoCliente;
+  } catch (error) {
+    console.error('Error al guardar el cliente:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('update-cliente', async (event, clienteActualizado) => {
+  const data = fs.existsSync(clientesPath)
+    ? JSON.parse(fs.readFileSync(clientesPath, 'utf-8'))
+    : [];
+  const index = data.findIndex(c => c.nit === clienteActualizado.nit);
+  if (index !== -1) {
+    data[index] = clienteActualizado;
+    fs.writeFileSync(clientesPath, JSON.stringify(data, null, 2));
+    return clienteActualizado;
+  }
+  throw new Error('Cliente no encontrado');
+});
+
+ipcMain.handle('delete-cliente', async (event, nit) => {
+  const data = fs.existsSync(clientesPath)
+    ? JSON.parse(fs.readFileSync(clientesPath, 'utf-8'))
+    : [];
+  const nuevos = data.filter(c => c.nit !== nit);
+  fs.writeFileSync(clientesPath, JSON.stringify(nuevos, null, 2));
+  return true;
+});
+
+//#endregion

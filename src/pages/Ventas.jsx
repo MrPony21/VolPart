@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { getProducts } from '../api/api';
 import ScannerInput from '../tools/ScannerInput';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
+import EditIcon from '@mui/icons-material/Edit';
+import "../styles/Ventas.css";
 
 const Ventas = () => {
   const [products, setProducts] = useState([]);
   const [ventasList, setVentasList] = useState([]);
   const [alertMsg, setAlertMsg] = useState("");
   const [cliente, setCliente] = useState({ nit: '', nombre: '', telefono: '', direccion: '' });
+  const [modalCantidadOpen, setModalCantidadOpen] = useState(false);
+  const [productoEdit, setProductoEdit] = useState(null);
+  const [cantidadEdit, setCantidadEdit] = useState(1);
+  const [modalAlert, setModalAlert] = useState("");
 
   useEffect(() => {
     getProducts()
@@ -19,6 +28,9 @@ const Ventas = () => {
     setCliente(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleEliminarProducto = (codigo) => {
+    setVentasList(prev => prev.filter(item => item.codigo !== codigo));
+  };
 
   const handleScan = (codigo) => {
     const codigoLimpio = codigo.trim();
@@ -27,11 +39,21 @@ const Ventas = () => {
       setVentasList(prev => {
         const idx = prev.findIndex(item => item.codigo === producto.codigo);
         if (idx !== -1) {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], cantidadVenta: updated[idx].cantidadVenta + 1 };
-          return updated;
+          if (prev[idx].cantidadVenta < producto.cantidad) {
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], cantidadVenta: updated[idx].cantidadVenta + 1 };
+            return updated;
+          } else {
+            setAlertMsg(`No hay suficiente stock para el producto ${producto.nombre}`);
+            return prev;
+          }
         }
-        return [...prev, { ...producto, cantidadVenta: 1 }];
+        if (producto.cantidad > 0) {
+          return [...prev, { ...producto, cantidadVenta: 1 }];
+        } else {
+          setAlertMsg(`No hay stock disponible para el producto ${producto.nombre}`);
+          return prev;
+        }
       });
       setAlertMsg("");
     } else {
@@ -39,58 +61,121 @@ const Ventas = () => {
     }
   };
 
-  //Falta agregar la logica para afectar a los datos reales
   const handleVenta = () => {
     setAlertMsg("Venta realizada con éxito (simulado)");
     setVentasList([]);
   };
 
-  // Calcular el total de la venta
   const totalVenta = ventasList.reduce((acc, el) => acc + (el.precio * el.cantidadVenta), 0);
 
+  const handleOpenCantidadModal = (producto) => {
+    setProductoEdit(producto);
+    setCantidadEdit(producto.cantidadVenta);
+    setModalCantidadOpen(true);
+  };
+
+  const handleSaveCantidad = () => {
+    if (productoEdit) {
+      setVentasList(prev => prev.map(item =>
+        item.codigo === productoEdit.codigo
+          ? { ...item, cantidadVenta: cantidadEdit }
+          : item
+      ));
+    }
+    setModalCantidadOpen(false);
+    setProductoEdit(null);
+  };
+
+  const onChangeCantidad = (e) => {
+    const value = e.target.value;
+    setCantidadEdit(value);
+    if (value > productoEdit.cantidad) {
+      setModalAlert("La cantidad seleccionada supera a la cantidad disponible");
+    } else if (value <= 0) {
+      setModalAlert("Selecciona una cantidad válida");
+    } else {
+      setModalAlert("");
+    }
+  };
+
   return (
-    <div style={{ padding: 30, minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }}>
-        <h1 style={{ margin: 0, color: '#1976d2', letterSpacing: 2 }}>Punto de Venta</h1>
+    <div className="ventas-container">
+      <div className="ventas-header">
+        <h1 className="ventas-title">Punto de Venta</h1>
       </div>
-      <h3 style={{ fontWeight: 700, color: '#1976d2', marginBottom: 18, marginLeft: 2 }}>Datos de Factura</h3>
-      <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px #bdbdbd22', padding: 24, marginBottom: 30 }}>
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 10 }}>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={{ fontWeight: 600 }}>Nit</label>
-            <input type="text" name="nit" value={cliente.nit} onChange={handleClienteChange} className="form-control" placeholder="NIT" />
+
+      <h3 className="ventas-datosfactura-title">Datos de Factura</h3>
+      <div className="ventas-datosfactura-card">
+        <div className="ventas-datosfactura-row">
+          <div className="ventas-datosfactura-input-group">
+            <label className="ventas-label-bold">Nit</label>
+            <input
+              type="text"
+              name="nit"
+              className="form-control"
+              placeholder="NIT"
+              value={cliente.nit}
+              onChange={handleClienteChange}
+            />
           </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={{ fontWeight: 600 }}>Nombre</label>
-            <input type="text" name="nombre" value={cliente.nombre} onChange={handleClienteChange} className="form-control" placeholder="Nombre" />
+          <div className="ventas-datosfactura-input-group">
+            <label className="ventas-label-bold">Nombre</label>
+            <input
+              type="text"
+              name="nombre"
+              className="form-control"
+              placeholder="Nombre"
+              value={cliente.nombre}
+              onChange={handleClienteChange}
+            />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={{ fontWeight: 600 }}>Teléfono</label>
-            <input type="text" name="telefono" value={cliente.telefono} onChange={handleClienteChange} className="form-control" placeholder="Teléfono" />
+        <div className="ventas-datosfactura-row">
+          <div className="ventas-datosfactura-input-group">
+            <label className="ventas-label-bold">Teléfono</label>
+            <input
+              type="text"
+              name="telefono"
+              className="form-control"
+              placeholder="Teléfono"
+              value={cliente.telefono}
+              onChange={handleClienteChange}
+            />
           </div>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <label style={{ fontWeight: 600 }}>Dirección</label>
-            <input type="text" name="direccion" value={cliente.direccion} onChange={handleClienteChange} className="form-control" placeholder="Dirección" />
+          <div className="ventas-datosfactura-input-group">
+            <label className="ventas-label-bold">Dirección</label>
+            <input
+              type="text"
+              name="direccion"
+              className="form-control"
+              placeholder="Dirección"
+              value={cliente.direccion}
+              onChange={handleClienteChange}
+            />
           </div>
         </div>
       </div>
-      <h3 style={{ fontWeight: 700, color: '#1976d2', marginBottom: 18, display: 'inline-block' }}>Productos a vender</h3>
+
+      <h3 className="ventas-productos-title">Productos a vender</h3>
       {ventasList.length > 0 && (
-        <div style={{ float: 'right', fontSize: 22, fontWeight: 700, color: '#388e3c', background: '#e8f5e9', borderRadius: 8, padding: '10px 24px', boxShadow: '0 2px 8px #b2dfdb55', marginBottom: 18 }}>
+        <div className="ventas-total">
           Total: Q {totalVenta.toFixed(2)}
         </div>
       )}
-      <div style={{ clear: 'both' }}></div>
-      <div style={{ marginBottom: 20, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #bdbdbd22', padding: 20 }}>
+      <div className="ventas-clear" />
+
+      {/* Scanner y alert */}
+      <div className="ventas-scanner-card">
         <ScannerInput onScan={handleScan} />
         {alertMsg && (
-          <div className="alert alert-info" style={{ margin: 10 }}>{alertMsg}</div>
+          <div className="alert alert-info ventas-alert">
+            {alertMsg}
+          </div>
         )}
       </div>
-      <table className="table table-striped table-bordered" style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px #bdbdbd22' }}>
-        <thead style={{ background: '#1976d2', color: '#fff' }}>
+
+      <table className="table table-striped table-bordered ventas-table">
+        <thead>
           <tr>
             <th>#</th>
             <th>Código</th>
@@ -99,6 +184,7 @@ const Ventas = () => {
             <th>Cantidad</th>
             <th>Precio</th>
             <th>Total</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -108,16 +194,94 @@ const Ventas = () => {
               <td>{el.codigo}</td>
               <td>{el.nombre}</td>
               <td>{el.marca}</td>
-              <td>{el.cantidadVenta}</td>
+              <td>
+                <div className="ventas-cantidad-cell">
+                  <span className="ventas-cantidad-span">
+                    {el.cantidadVenta}
+                  </span>
+                  <button
+                    className="btn btn-outline-warning btn-sm"
+                    onClick={() => handleOpenCantidadModal(el)}
+                  >
+                    <EditIcon fontSize="small" />
+                  </button>
+                </div>
+              </td>
               <td>Q{el.precio}</td>
               <td><b>Q{(el.precio * el.cantidadVenta).toFixed(2)}</b></td>
+              <td className="ventas-delete-cell">
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => handleEliminarProducto(el.codigo)}
+                >
+                  <DeleteIcon />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      <Modal
+        open={modalCantidadOpen}
+        onClose={() => setModalCantidadOpen(false)}
+        aria-labelledby="modal-cantidad-title"
+        aria-describedby="modal-cantidad-desc"
+      >
+        <Box className="ventas-modal-box">
+          <h4 id="modal-cantidad-title">Editar cantidad</h4>
+          {productoEdit && (
+            <>
+              <div className="ventas-modal-info">
+                <b>{productoEdit.nombre}</b><br />
+                <span className="ventas-info-blue">
+                  Disponible: {productoEdit.cantidad}
+                </span>
+              </div>
+              <input
+                type="number"
+                max={productoEdit.cantidad}
+                value={cantidadEdit}
+                onChange={onChangeCantidad}
+                onBlur={e => {
+                  const val = Number(e.target.value);
+                  setCantidadEdit(
+                    Math.max(1, Math.min(productoEdit.cantidad, isNaN(val) ? 1 : val))
+                  );
+                }}
+                className="form-control ventas-modal-input"
+              />
+              <span className="ventas-modal-alert">
+                {modalAlert}
+              </span>
+              <div className="ventas-modal-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setModalCantidadOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSaveCantidad}
+                  disabled={!!modalAlert}
+                >
+                  Guardar
+                </button>
+              </div>
+            </>
+          )}
+        </Box>
+      </Modal>
+
       {ventasList.length > 0 && (
-        <div style={{ textAlign: 'right', marginTop: 30 }}>
-          <button className="btn btn-success" style={{ fontSize: 18, padding: '10px 32px', borderRadius: 8 }} onClick={handleVenta}>Realizar Venta</button>
+        <div className="ventas-boton-realizar">
+          <button
+            className="btn btn-success ventas-btn-realizar"
+            onClick={handleVenta}
+          >
+            Realizar Venta
+          </button>
         </div>
       )}
     </div>

@@ -88,7 +88,7 @@ const linksArray = [
   {
     label: "Clientes",
     icon: <FaceIcon />,
-    to: "/productos",
+    to: "/Clientes",
   },
   {
     label: "Reportes",
@@ -96,7 +96,7 @@ const linksArray = [
     to: "/Reportes",
   },
   {
-    label: "Importar Productos",
+    label: "Importar",
     icon: <FileUploadIcon />,
     to: "/CargarArchivo",
   },

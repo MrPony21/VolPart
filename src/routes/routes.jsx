@@ -5,6 +5,7 @@ import CrearProducto from "../pages/CrearProducto";
 import Reportes from "../pages/Reportes";
 import CargarArchivo from "../pages/CargarArchivo";
 import Ventas from "../pages/Ventas";
+import Clientes from "../pages/Clientes"
 
 const AppRouter = () =>{
     return(
@@ -13,8 +14,9 @@ const AppRouter = () =>{
             <Route path="/ProductoDetalle" element={<ProductoDetalle/>}/>
             <Route path="/CrearProducto" element={<CrearProducto/>}></Route>
             <Route path="/Ventas" element={<Ventas/>}></Route>
+            <Route path="/Clientes" element={<Clientes/>}></Route>
             <Route path="/Reportes" element={<Reportes/>}></Route>
-            <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>
+            <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>/
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     )

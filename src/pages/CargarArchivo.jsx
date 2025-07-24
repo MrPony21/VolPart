@@ -49,7 +49,7 @@ const CargarArchivo = () => {
 
     return (
         <div style={{ padding: 20 }}>
-            <h1 style={{ margin: "20px" }}>Importar Productos</h1>
+            <h1 style={{ margin: "20px" }}>Importar</h1>
             {alertSuccess && (
                 <Alert variant="filled" severity="success" style={{ marginBottom: 20 }}>
                     {alertSuccess}
@@ -68,16 +68,16 @@ const CargarArchivo = () => {
                     style={{ display: 'none' }}
                     onChange={handleFileUpload}
                 />
+                 <p style={{ marginTop: 10, color: '#666' }}>
+                    Seleccione un archivo JSON con la lista de productos para importar
+                </p>
                 <button 
                     type="button" 
                     className="btn btn-primary"
                     onClick={() => document.getElementById('file-upload').click()}
                 >
-                    Seleccionar archivo JSON
+                    Cargar Productos (JSON)
                 </button>
-                <p style={{ marginTop: 10, color: '#666' }}>
-                    Seleccione un archivo JSON con la lista de productos para importar
-                </p>
             </div>
             {showConfirm && fileToImport && (
                 <div style={{

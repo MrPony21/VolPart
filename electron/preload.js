@@ -13,5 +13,9 @@ contextBridge.exposeInMainWorld("api", {
   createProduct: (nuevoProducto) => ipcRenderer.invoke('create-product', nuevoProducto),
   exportarInventarioEnJson: ()  => ipcRenderer.invoke('exportar-inventario-json'),
   exportarInventarioEnExcel: () => ipcRenderer.invoke('exportar-excel-productos'),
-  importarProductos: (productos) => ipcRenderer.invoke('importar-productos', productos)
+  importarProductos: (productos) => ipcRenderer.invoke('importar-productos', productos),
+  getClientes: () => ipcRenderer.invoke('get-clientes'),
+  createCliente: (cliente) => ipcRenderer.invoke('create-cliente', cliente),
+  updateCliente: (cliente) => ipcRenderer.invoke('update-cliente', cliente),
+  deleteCliente: (nit) => ipcRenderer.invoke('delete-cliente', nit)
 });

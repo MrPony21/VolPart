@@ -1,0 +1,155 @@
+/* Ventas.css */
+.ventas-container {
+  padding: 30px;
+  min-height: 100vh;
+}
+
+.ventas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.ventas-title {
+  margin: 0;
+  color: #000000;
+  letter-spacing: 2px;
+}
+
+.ventas-datosfactura-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 18px;
+  margin-left: 2px;
+}
+
+.ventas-datosfactura-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #bdbdbd22;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.ventas-datosfactura-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.ventas-datosfactura-input-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+.ventas-label-bold {
+  font-weight: 600;
+}
+
+.ventas-productos-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 18px;
+  display: inline-block;
+}
+
+.ventas-total {
+  float: right;
+  font-size: 22px;
+  font-weight: 700;
+  color: #388e3c;
+  background: #e8f5e9;
+  border-radius: 8px;
+  padding: 10px 24px;
+  box-shadow: 0 2px 8px #b2dfdb55;
+  margin-bottom: 18px;
+}
+
+.ventas-clear {
+  clear: both;
+}
+
+.ventas-scanner-card {
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #bdbdbd22;
+  padding: 20px;
+}
+
+.ventas-alert {
+  margin: 10px;
+}
+
+.ventas-table {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px #bdbdbd22;
+}
+
+.ventas-table thead {
+  background: #1976d2;
+  color: #fff;
+}
+
+.ventas-cantidad-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ventas-cantidad-span {
+  margin-right: 8px;
+}
+
+.ventas-delete-cell {
+  width: 1px;
+}
+
+.ventas-modal-box {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 400px !important;
+  background-color: #fff !important;
+  border-radius: 16px !important;
+  box-shadow: 0px 8px 24px #00000022 !important;
+  padding: 32px !important;
+}
+
+.ventas-modal-info {
+  margin-bottom: 12px;
+}
+
+.ventas-info-blue {
+  color: #1976d2;
+}
+
+.ventas-modal-input {
+  margin-bottom: 2px;
+}
+
+.ventas-modal-alert {
+  color: #de1800;
+  font-size: small;
+}
+
+.ventas-modal-actions {
+  text-align: right;
+  margin-top: 12px;
+}
+
+.ventas-boton-realizar {
+  text-align: right;
+  margin-top: 30px;
+}
+
+.ventas-btn-realizar {
+  font-size: 18px;
+  padding: 10px 32px;
+  border-radius: 8px;
+}
