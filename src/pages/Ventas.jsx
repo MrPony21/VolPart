@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts } from '../api/api';
+import { getProducts, getClientes } from '../api/api';
 import ScannerInput from '../tools/ScannerInput';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Modal from '@mui/material/Modal';
@@ -16,17 +16,49 @@ const Ventas = () => {
   const [productoEdit, setProductoEdit] = useState(null);
   const [cantidadEdit, setCantidadEdit] = useState(1);
   const [modalAlert, setModalAlert] = useState("");
+  const [clientes, setClientes] = useState([]);
+
 
   useEffect(() => {
     getProducts()
       .then(data => setProducts(data))
       .catch(err => console.error(err));
+    getClientes()
+      .then(data => setClientes(data))
+      .catch(err => console.error(err));
   }, []);
 
   const handleClienteChange = (e) => {
     const { name, value } = e.target;
-    setCliente(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'nit') {
+      const nitIngresado = value.trim();
+
+      const encontrado = clientes.find(c => c.nit === nitIngresado);
+
+      if (encontrado) {
+        setCliente({
+          nit: encontrado.nit,
+          nombre: encontrado.nombre,
+          telefono: encontrado.telefono,
+          direccion: encontrado.direccion,
+        });
+      }
+      else {
+        setCliente(prev => ({
+          ...prev,
+          nit: nitIngresado,
+          nombre: '',
+          telefono: '',
+          direccion: '',
+        }));
+      }
+    }
+    else {
+      setCliente(prev => ({ ...prev, [name]: value }));
+    }
   };
+
 
   const handleEliminarProducto = (codigo) => {
     setVentasList(prev => prev.filter(item => item.codigo !== codigo));
@@ -63,6 +95,8 @@ const Ventas = () => {
 
   const handleVenta = () => {
     setAlertMsg("Venta realizada con éxito (simulado)");
+
+
     setVentasList([]);
   };
 

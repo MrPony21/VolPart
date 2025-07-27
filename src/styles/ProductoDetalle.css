@@ -26,3 +26,12 @@
     display: flex;
    
 }
+
+.code-campo{
+    display: flex;
+    justify-content: space-between;
+}
+
+.code-campo input{
+    width: 85%;
+}

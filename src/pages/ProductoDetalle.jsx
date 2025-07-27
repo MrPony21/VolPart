@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { updateProduct } from '../api/api';
 import Alert from '@mui/material/Alert';
+import { generatePdfWithBarcode } from '../tools/barcode';
+import logo from "../assets/logo.jpg";
 import "../styles/ProductoDetalle.css"
 
 const ProductoDetalle = () => {
@@ -82,6 +84,12 @@ const ProductoDetalle = () => {
         }
     }
 
+    const generarCodigoBaras = () => {
+
+        generatePdfWithBarcode(datos.codigo, logo);
+
+    }
+
     return (
         <div style={{ padding: 20 }}>
             <h2 >Detalle del Producto</h2>
@@ -100,13 +108,19 @@ const ProductoDetalle = () => {
                     {error}
                 </Alert>
             )}
-                    
-       
+
+
             <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div style={{ width: "100%" }}>
                     <div>
                         <label>Código:</label>
-                        <input className={`form-control mb-2 modoEdicionInput`} value={datos.codigo} readOnly />
+                        <div className='code-campo'>
+                            <input className={`form-control mb-2 modoEdicionInput`} value={datos.codigo} readOnly />
+                            <div>
+                                <button className='btn btn-primary' onClick={generarCodigoBaras}>Generar Imagen</button>
+                            </div>
+                        </div>
+
                     </div>
                     <div>
                         <label>Nombre:</label>
@@ -172,13 +186,14 @@ const ProductoDetalle = () => {
                         <div className="button-edit-delete">
                             <button className="btn btn-warning me-2" onClick={() => setModoEdicion(true)}
                             >Editar</button>
-                            
+
                         </div>
-                        <button className="btn btn-primary regresar-buttom" onClick={() => {creadoAlert ? navigate("/") : navigate(-1) } } >Regresar</button>
+                        <button className="btn btn-primary regresar-buttom" onClick={() => { creadoAlert ? navigate("/") : navigate(-1) }} >Regresar</button>
                     </div>
                 )}
 
             </div>
+
         </div>
     );
 };

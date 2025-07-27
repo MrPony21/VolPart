@@ -2,14 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createCliente, updateCliente, deleteCliente, getClientes } from '../api/api';
 import '../styles/inventory.css';
 
-const initialClientes = [
-    { nit: '1234567', nombre: 'Juan Pérez', telefono: '555-1234', direccion: 'Buenos ' },
-    { nit: '9876543', nombre: 'Ana López', telefono: '555-5678', direccion: 'Zona 10' },
-    { nit: '5555555', nombre: 'Carlos Ruiz', telefono: '555-9999', direccion: 'Zona 4' },
-];
-
 const Clientes = () => {
-    const [clientes, setClientes] = useState(initialClientes);
+    const [clientes, setClientes] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [filterField, setFilterField] = useState("nit");
     const [modalShow, setModalShow] = useState(false);
