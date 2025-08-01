@@ -72,3 +72,26 @@ export async function deleteCliente(nit) {
     const response = await window.api.deleteCliente(nit);
     return response;
 }
+
+export async function createSale(venta) {
+  // venta: { client, items, total, date }
+  const result = await window.api.createSale(venta);
+  return result; // { nuevaVenta, invoicePath }
+}
+
+export async function getSales() {
+  const ventas = await window.api.getSales();
+  return ventas; 
+}
+
+
+export async function exportarVentasJSON() {
+  const response = await window.api.exportarVentasJson();
+  return response;
+}
+
+/** Exporta clientes en JSON */
+export async function exportarClientesJSON() {
+  const response = await window.api.exportarClientesJson();
+  return response;
+}

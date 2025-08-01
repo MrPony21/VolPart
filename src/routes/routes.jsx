@@ -6,6 +6,7 @@ import Reportes from "../pages/Reportes";
 import CargarArchivo from "../pages/CargarArchivo";
 import Ventas from "../pages/Ventas";
 import Clientes from "../pages/Clientes"
+import Sales from "../pages/Sales";
 
 const AppRouter = () =>{
     return(
@@ -16,7 +17,8 @@ const AppRouter = () =>{
             <Route path="/Ventas" element={<Ventas/>}></Route>
             <Route path="/Clientes" element={<Clientes/>}></Route>
             <Route path="/Reportes" element={<Reportes/>}></Route>
-            <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>/
+            <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>
+            <Route path="/Sales" element={<Sales/>}></Route>
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     )

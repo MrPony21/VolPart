@@ -1,0 +1,210 @@
+/* sales.css */
+
+/* Contenedor principal */
+.sales-container {
+    padding-top: 15px;
+    min-height: 100vh;
+    background-color: #f5f8fc;
+}
+
+/* Encabezado y título */
+.sales-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.sales-title {
+  margin: 0;
+  font-size: 2rem;
+  color: #000;
+  letter-spacing: 2px;
+}
+
+/* Sección Datos de Cliente/Factura */
+.sales-client-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 18px;
+  margin-left: 2px;
+}
+
+.sales-client-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #bdbdbd22;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.sales-client-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sales-client-input-group {
+  flex: 1;
+  min-width: 220px;
+}
+
+/* Título Productos */
+.sales-products-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 18px;
+  display: inline-block;
+}
+
+/* Alerta informativa */
+.sales-alert {
+  margin: 10px 0;
+}
+
+/* Tabla de productos en venta */
+.sales-table {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px #bdbdbd22;
+}
+
+.sales-table {
+  /* existing styles… */
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.sales-client-card {
+  width: 100%;
+  padding: 32px 24px;  /* más espacio interior */
+  box-sizing: border-box;
+  margin-bottom: 24px;
+}
+
+
+
+.sales-table thead {
+  background: #1976d2;
+  color: #fff;
+}
+
+.sales-cantidad-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sales-cantidad-span {
+  margin-right: 8px;
+}
+
+.sales-delete-cell {
+  width: 1px;
+}
+
+/* Total y botón */
+.sales-total {
+  float: none;
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-size: 17px;
+  font-weight: 700;
+  color: #388e3c;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px 24px;
+  box-shadow: 0 2px 8px #b2dfdb55;
+  margin-top: 16px;
+}
+
+.sales-action {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.sales-btn-action {
+  font-size: 18px;
+  padding: 10px 32px;
+  border-radius: 8px;
+}
+
+.sales-modal-box {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 400px !important;
+  background-color: #fff !important;
+  border-radius: 16px !important;
+  box-shadow: 0px 8px 24px #00000022 !important;
+  padding: 32px !important;
+}
+
+.sales-modal-info {
+  margin-bottom: 12px;
+}
+
+.sales-info-blue {
+  color: #1976d2;
+}
+
+.sales-modal-input {
+  margin-bottom: 8px;
+}
+
+.sales-modal-alert {
+  color: #de1800;
+  font-size: small;
+}
+
+.sales-modal-actions {
+  text-align: right;
+  margin-top: 12px;
+}
+
+
+.sales-filter-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sales-filter-input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 150px;
+}
+
+/* Paginación */
+.sales-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+/* Botones de paginación */
+.sales-pagination-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #1976d2;
+  color: #fff;
+  cursor: pointer;
+}
+
+.sales-pagination-button.disabled {
+  background-color: #ccc;
+  cursor: default;
+}
+
+/* Información de página */
+.sales-page-info {
+  font-weight: 500;
+}

@@ -17,5 +17,9 @@ contextBridge.exposeInMainWorld("api", {
   getClientes: () => ipcRenderer.invoke('get-clientes'),
   createCliente: (cliente) => ipcRenderer.invoke('create-cliente', cliente),
   updateCliente: (cliente) => ipcRenderer.invoke('update-cliente', cliente),
-  deleteCliente: (nit) => ipcRenderer.invoke('delete-cliente', nit)
+  deleteCliente: (nit) => ipcRenderer.invoke('delete-cliente', nit),
+  createSale: (venta) => ipcRenderer.invoke("create-venta", venta),
+  getSales: () => ipcRenderer.invoke('get-ventas'),
+  exportarVentasJson: ()     => ipcRenderer.invoke('exportar-ventas-json'),
+  exportarClientesJson: ()   => ipcRenderer.invoke('exportar-clientes-json'),
 });

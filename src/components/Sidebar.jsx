@@ -16,6 +16,7 @@ import SellIcon from '@mui/icons-material/Sell';
 import FaceIcon from '@mui/icons-material/Face';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const ModSidebaropen = () => {
@@ -81,9 +82,14 @@ const linksArray = [
     to: "/",
   },
   {
-    label: "Ventas",
+    label: "Punto Venta",
     icon: <SellIcon />,
     to: "/Ventas",
+  },
+  {
+    label: "Ventas",
+    icon: <ReceiptIcon />,
+    to: "/Sales",
   },
   {
     label: "Clientes",

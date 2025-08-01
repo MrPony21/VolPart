@@ -298,4 +298,132 @@ ipcMain.handle('delete-cliente', async (event, nit) => {
   return true;
 });
 
+ipcMain.handle('exportar-clientes-json', async () => {
+  const clientesPath = path.join(app.getPath('userData'), 'clientes.json');
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Exportar Clientes (JSON)',
+    defaultPath: 'clientes.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (canceled) return { success: false, mensaje: 'Exportación cancelada' };
+
+  try {
+    const data = fs.readFileSync(clientesPath, 'utf-8');
+    fs.writeFileSync(filePath, data, 'utf-8');
+    return { success: true, ruta: filePath };
+  } catch (err) {
+    return { success: false, mensaje: err.message };
+  }
+});
+
+
+//#endregion
+
+
+//#region Ventas
+ipcMain.handle('create-venta', async (event, venta) => {
+  // 1) Persistir la venta en ventas.json (igual que antes)
+  const ventasPath = path.join(app.getPath('userData'), 'ventas.json');
+  const ventas = fs.existsSync(ventasPath)
+    ? JSON.parse(fs.readFileSync(ventasPath, 'utf-8'))
+    : [];
+  const id = Date.now();
+  const nuevaVenta = { id, ...venta };
+  ventas.push(nuevaVenta);
+  fs.writeFileSync(ventasPath, JSON.stringify(ventas, null, 2));
+
+  // 2) Actualizar stock en data.json (igual que antes)
+  const dataPath = path.join(app.getPath('userData'), 'data.json');
+  const productos = fs.existsSync(dataPath)
+    ? JSON.parse(fs.readFileSync(dataPath, 'utf-8'))
+    : [];
+  venta.items.forEach(item => {
+    const idx = productos.findIndex(p => p.codigo === item.codigo);
+    if (idx !== -1) productos[idx].cantidad -= item.cantidadVenta;
+  });
+  fs.writeFileSync(dataPath, JSON.stringify(productos, null, 2));
+
+  // 3) Generar PDF de la factura
+  // a) Pedir ruta de guardado
+  const { filePath } = await dialog.showSaveDialog({
+    title: 'Guardar factura (PDF)',
+    defaultPath: `factura-${id}.pdf`,
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+
+  let invoicePath = null;
+  if (filePath) {
+    // b) Crear ventana oculta para renderizar factura
+    const pdfWin = new BrowserWindow({ 
+      width: 600, 
+      height: 800, 
+      show: false,
+      webPreferences: { offscreen: true }
+    });
+
+    // c) Construir un HTML simple con estilo y logo
+    const logoPath = path.join(__dirname, 'assets', 'logo.jpg'); // ajusta ruta si hace falta
+    const html = `
+      <html><body style="font-family: sans-serif; padding:20px;">
+        <img src="file://${logoPath}" style="width:150px;"/>
+        <h2>Factura de Venta #${id}</h2>
+        <p>Fecha: ${new Date().toLocaleString()}</p>
+        <h3>Cliente</h3>
+        <p>NIT: ${venta.client.nit}<br/>
+           Nombre: ${venta.client.nombre}<br/>
+           Teléfono: ${venta.client.telefono}<br/>
+           Dirección: ${venta.client.direccion}</p>
+        <h3>Productos</h3>
+        <table width="100%" border="1" cellpadding="4" cellspacing="0">
+          <tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr>
+          ${venta.items.map(it=>`
+            <tr>
+              <td>${it.nombre}</td>
+              <td align="center">${it.cantidadVenta}</td>
+              <td align="right">Q${it.precio.toFixed(2)}</td>
+              <td align="right">Q${(it.precio*it.cantidadVenta).toFixed(2)}</td>
+            </tr>`).join('')}
+        </table>
+        <h3 style="text-align:right;">TOTAL: Q${venta.total.toFixed(2)}</h3>
+      </body></html>
+    `;
+
+    // d) Cargar HTML y generar PDF
+    await pdfWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    const pdfBuffer = await pdfWin.webContents.printToPDF({});
+    fs.writeFileSync(filePath, pdfBuffer);
+    pdfWin.destroy();
+    invoicePath = filePath;
+  }
+
+  return { nuevaVenta, invoicePath };
+});
+// ─────────────────────────────────────────────────────────────────
+
+ipcMain.handle('get-ventas', async () => {
+  const ventasPath = path.join(app.getPath('userData'), 'ventas.json');
+  if (!fs.existsSync(ventasPath)) return [];
+  const ventas = JSON.parse(fs.readFileSync(ventasPath, 'utf-8'));
+  return ventas;
+});
+
+ipcMain.handle('exportar-ventas-json', async () => {
+  const ventasPath = path.join(app.getPath('userData'), 'ventas.json');
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Exportar Ventas (JSON)',
+    defaultPath: 'ventas.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (canceled) return { success: false, mensaje: 'Exportación cancelada' };
+
+  try {
+    const data = fs.readFileSync(ventasPath, 'utf-8');
+    fs.writeFileSync(filePath, data, 'utf-8');
+    return { success: true, ruta: filePath };
+  } catch (err) {
+    return { success: false, mensaje: err.message };
+  }
+});
+
+
 //#endregion

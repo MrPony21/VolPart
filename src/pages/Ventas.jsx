@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts, getClientes } from '../api/api';
+import { getProducts, getClientes, createSale } from '../api/api';
 import ScannerInput from '../tools/ScannerInput';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import EditIcon from '@mui/icons-material/Edit';
+
 import "../styles/Ventas.css";
 
 const Ventas = () => {
@@ -93,12 +94,37 @@ const Ventas = () => {
     }
   };
 
-  const handleVenta = () => {
-    setAlertMsg("Venta realizada con éxito (simulado)");
+const handleVenta = async () => {
+  if (!cliente.nit || ventasList.length === 0) {
+    setAlertMsg("Ingrese un cliente válido y al menos un producto");
+    return;
+  }
 
-
-    setVentasList([]);
+  const ventaPayload = {
+    client: cliente,
+    items: ventasList,
+    total: totalVenta,
+    date: new Date().toISOString()
   };
+
+  try {
+    const { nuevaVenta, invoicePath } = await createSale(ventaPayload);
+    // Refrescar inventario en frontend
+    const productosActualizados = await getProducts();
+    setProducts(productosActualizados);
+
+    setAlertMsg(`Venta #${nuevaVenta.id} registrada.`);
+    setVentasList([]);
+
+    if (invoicePath) {
+      setAlertMsg(prev => prev + ` Factura guardada en: ${invoicePath}`);
+    }
+  } catch (err) {
+    console.error(err);
+    setAlertMsg("Error al procesar la venta.");
+  }
+};
+
 
   const totalVenta = ventasList.reduce((acc, el) => acc + (el.precio * el.cantidadVenta), 0);
 
