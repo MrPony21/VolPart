@@ -95,3 +95,15 @@ export async function exportarClientesJSON() {
   const response = await window.api.exportarClientesJson();
   return response;
 }
+
+/** Importa un array de ventas (incluso vacío) */
+export async function importVentas(ventas) {
+  const res = await window.api.importarVentas(ventas);
+  return res; // { success, mensaje }
+}
+
+/** Importa un array de clientes (incluso vacío) */
+export async function importClientes(clientes) {
+  const res = await window.api.importarClientes(clientes);
+  return res;
+}

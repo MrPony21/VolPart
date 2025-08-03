@@ -425,5 +425,37 @@ ipcMain.handle('exportar-ventas-json', async () => {
   }
 });
 
+// —————————— Importar Ventas JSON ——————————
+ipcMain.handle('importar-ventas', async (event, ventasArray) => {
+  // Acepta array vacío o con elementos
+  if (!Array.isArray(ventasArray)) {
+    return { success: false, mensaje: 'El archivo no contiene un array de ventas.' };
+  }
+  const ventasPath = path.join(app.getPath('userData'), 'ventas.json');
+  try {
+    fs.writeFileSync(ventasPath, JSON.stringify(ventasArray, null, 2), 'utf-8');
+    return { success: true, mensaje: 'Ventas importadas correctamente.' };
+  } catch (err) {
+    console.error('Error al importar ventas:', err);
+    return { success: false, mensaje: 'Error interno al importar ventas.' };
+  }
+});
+
+// —————————— Importar Clientes JSON ——————————
+ipcMain.handle('importar-clientes', async (event, clientesArray) => {
+  if (!Array.isArray(clientesArray)) {
+    return { success: false, mensaje: 'El archivo no contiene un array de clientes.' };
+  }
+  const clientesPath = path.join(app.getPath('userData'), 'clientes.json');
+  try {
+    fs.writeFileSync(clientesPath, JSON.stringify(clientesArray, null, 2), 'utf-8');
+    return { success: true, mensaje: 'Clientes importados correctamente.' };
+  } catch (err) {
+    console.error('Error al importar clientes:', err);
+    return { success: false, mensaje: 'Error interno al importar clientes.' };
+  }
+});
+
+
 
 //#endregion

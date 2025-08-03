@@ -22,4 +22,6 @@ contextBridge.exposeInMainWorld("api", {
   getSales: () => ipcRenderer.invoke('get-ventas'),
   exportarVentasJson: ()     => ipcRenderer.invoke('exportar-ventas-json'),
   exportarClientesJson: ()   => ipcRenderer.invoke('exportar-clientes-json'),
+  importarVentas: (ventas)   => ipcRenderer.invoke('importar-ventas', ventas),
+  importarClientes: (clientes)=> ipcRenderer.invoke('importar-clientes', clientes),
 });
