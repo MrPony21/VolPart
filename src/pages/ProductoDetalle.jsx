@@ -22,6 +22,7 @@ const ProductoDetalle = () => {
     const [actualizadoAlert, setActualizadoAlert] = useState(false)
     //const [creadoAlert, setCreadoAlert] = useState(false)
     const [error, setError] = useState("");
+    const [cantidadStickers, setCantidadStickers] = useState(1);
 
 
     const creadoAlert = location.state?.productoCreado || false;
@@ -84,11 +85,20 @@ const ProductoDetalle = () => {
         }
     }
 
-    const generarCodigoBaras = () => {
+const generarCodigoBaras = () => {
+  const qty = parseInt(cantidadStickers || "0", 10);
+  if (!Number.isInteger(qty) || qty < 1) {
+    setError("Ingresa una cantidad válida de stickers (entero ≥ 1).");
+    return;
+  }
+  setError("");
+  generatePdfWithBarcode(datos.codigo, logo, qty);
+};
 
-        generatePdfWithBarcode(datos.codigo, logo);
-
-    }
+const handleCantidadStickersChange = (e) => {
+  const v = e.target.value;
+  if (/^\d*$/.test(v)) setCantidadStickers(v);
+};
 
     return (
         <div style={{ padding: 20 }}>
@@ -115,12 +125,25 @@ const ProductoDetalle = () => {
                     <div>
                         <label>Código:</label>
                         <div className='code-campo'>
-                            <input className={`form-control mb-2 modoEdicionInput`} value={datos.codigo} readOnly />
-                            <div>
-                                <button className='btn btn-primary' onClick={generarCodigoBaras}>Generar Imagen</button>
+                            <input className="form-control mb-2 modoEdicionInput" value={datos.codigo} readOnly />
+
+                            <div className="d-flex align-items-center gap-2 ml-2 mb-2">
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="\d*"
+                                    className="form-control"
+                                    style={{ width: 100 }}
+                                    placeholder="Cantidad"
+                                    value={cantidadStickers}
+                                    onChange={handleCantidadStickersChange}
+                                    aria-label="Cantidad de stickers"
+                                />
+                                <button className='btn btn-primary' onClick={generarCodigoBaras}>
+                                    Generar códigos
+                                </button>
                             </div>
                         </div>
-
                     </div>
                     <div>
                         <label>Nombre:</label>
