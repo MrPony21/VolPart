@@ -13,33 +13,32 @@ import { jsPDF } from 'jspdf';
  * @param {string} logoUrl   URL o import de tu logo (PNG/JPEG).
  * @param {string} [fileName] Nombre de archivo por defecto: "barcode_<code>.pdf".
  */
-export function generatePdfWithBarcode(code, logoUrl, fileNameOrCount) {
-  // === Configuración de página y “sticker” (en puntos; 72 pt = 1 in) ===
+export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const pageWidth  = doc.internal.pageSize.getWidth();   // 612 pt (8.5 in)
-  const pageHeight = doc.internal.pageSize.getHeight();  // 792 pt (11 in)
-  const margin     = 40;
 
-  // Marco general (como en tu plantilla)
-  const contentW   = pageWidth - margin * 2;
-  const contentH   = pageHeight - margin * 2;
+  // Página carta
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
 
-  // Tamaño del sticker (pequeño para etiquetas)
-  const stickerW   = 180;  // ~2.5 in
-  const stickerH   = 120;  // ~1.67 in
-  const gapX       = 10;   // separación horizontal entre stickers
-  const gapY       = 10;   // separación vertical entre stickers
-  const pad        = 6;    // padding interno del sticker
+  // === Grid fijo: 3 columnas x 10 filas ===
+  const margin = 24;     // ajustable
+  const gridCols = 3;
+  const gridRows = 10;
+  const gapX = 10;       // separación horizontal
+  const gapY = 6;        // separación vertical
 
-  // Layout interno del sticker
-  const logoW      = 90;   // ancho del logo dentro del sticker
-  const logoH      = 60;   // alto del logo
-  const gapAfterLogo   = 10;
-  const barcodeH       = 50; // alto del código de barras
-  const gapAfterBarcode= 8;
-  const textFontSize   = 10;
+  const contentW = pageW - margin * 2;
+  const contentH = pageH - margin * 2;
 
-  // === Tercer parámetro: archivo o cantidad ===
+  // Tamaño del sticker derivado del grid
+  const stickerW = Math.floor((contentW - gapX * (gridCols - 1)) / gridCols);
+  const stickerH = Math.floor((contentH - gapY * (gridRows - 1)) / gridRows);
+  const pad = 6;
+
+  // Tipografía
+  const textFontSize = 9;
+
+  // Archivo o cantidad
   let fileName = `barcode_${code}.pdf`;
   let count = 1;
   if (typeof fileNameOrCount === 'string' && fileNameOrCount.trim()) {
@@ -48,91 +47,83 @@ export function generatePdfWithBarcode(code, logoUrl, fileNameOrCount) {
     count = Math.max(1, Math.floor(fileNameOrCount));
   }
 
-  // Cálculo de columnas/filas que caben en el área con marco
-  const cols = Math.max(1, Math.floor((contentW + gapX) / (stickerW + gapX)));
-  const rows = Math.max(1, Math.floor((contentH + gapY) / (stickerH + gapY)));
-  const perPage = Math.max(1, cols * rows);
+  // Marco (opcional)
+  // const drawPageFrame = () => {
+  //   doc.setLineWidth(0.8);
+  //   doc.rect(margin, margin, contentW, contentH);
+  // };
+  // drawPageFrame();
 
-  // Función para dibujar el marco de la página (como tu paso 1)
-  const drawPageFrame = () => {
-    doc.setLineWidth(1);
-    doc.rect(margin, margin, contentW, contentH);
-  };
-
-  drawPageFrame();
-
-  // Preparamos el barcode como dataURL (mismo para todos los stickers)
-  const makeBarcodeDataUrl = () => {
+  // Barcode en dataURL (reutilizable)
+  const makeBarcodeDataUrl = (targetW, targetH) => {
     const canvas = document.createElement('canvas');
-    // Para mejor nitidez, generamos un poco más ancho que el destino (x2)
-    const targetW = Math.floor((stickerW - pad * 2) * 0.95);
-    canvas.width  = targetW * 2;
-    canvas.height = barcodeH * 2;
+    canvas.width = Math.max(140, targetW * 2);    // @2x nitidez
+    canvas.height = Math.max(60, targetH * 2);
 
     JsBarcode(canvas, String(code), {
       format: 'CODE128',
-      displayValue: true,    // como en tu plantilla
+      displayValue: true,
       margin: 0,
-      height: canvas.height, // ocupa el alto completo del canvas
+      height: canvas.height * 0.75,
       lineColor: '#000',
       background: '#fff',
-      // ancho de barra heurístico: quepan muchas barras y sea nítido
-      width: Math.max(1, Math.round(canvas.width / 120)),
+      width: Math.max(1, Math.round(canvas.width / 140)),
     });
     return canvas.toDataURL('image/png');
   };
 
-  const barcodeDataUrl = makeBarcodeDataUrl();
+  // Layout interno (logo IZQ, barcode DER, precio abajo)
+  const innerW = stickerW - pad * 2;
+  const innerH = stickerH - pad * 2;
 
-  // Dibuja un sticker (logo + barcode + texto) en (x,y)
+  const logoBox = Math.min(44, Math.floor(innerH * 0.65)); // logo un poco más pequeño
+  const logoGap = 6;
+
+  const priceLine = textFontSize + 3;
+  const barcodeW = Math.max(60, innerW - logoBox - logoGap);
+  const barcodeH = Math.max(36, innerH - priceLine - 2);
+
+  const barcodeDataUrl = makeBarcodeDataUrl(barcodeW, barcodeH);
+
   const drawSticker = (x, y) => {
-    // (opcional) borde del sticker para referencia visual fina
-    // doc.setLineWidth(0.5); doc.rect(x, y, stickerW, stickerH);
+    const ix = x + pad;
+    const iy = y + pad;
 
-    const innerX = x + pad;
-    const innerY = y + pad;
-    const innerW = stickerW - pad * 2;
-    const innerH = stickerH - pad * 2;
+    // (opcional) borde del sticker
+    // doc.setLineWidth(0.3); doc.rect(x, y, stickerW, stickerH);
 
-    // Logo centrado
-    const logoX = innerX + (innerW - logoW) / 2;
-    const logoY = innerY;
     if (logoUrl) {
-      // Usa el mismo tipo 'PNG' que tu plantilla (asumiendo dataURL/PNG válido)
-      doc.addImage(logoUrl, 'PNG', logoX, logoY, Math.min(logoW, innerW), logoH);
+      const logoX = ix;
+      const logoY = iy + Math.floor((innerH - logoBox) / 2);
+      doc.addImage(logoUrl, 'PNG', logoX, logoY, logoBox, logoBox);
     }
 
-    // Barcode centrado debajo del logo
-    const barcodeW = innerW * 0.95; // 95% del ancho interno
-    const barcodeX = innerX + (innerW - barcodeW) / 2;
-    const barcodeY = logoY + logoH + gapAfterLogo;
-    doc.addImage(barcodeDataUrl, 'PNG', barcodeX, barcodeY, barcodeW, barcodeH);
+    const bcX = ix + logoBox + logoGap;
+    const bcY = iy;
+    doc.addImage(barcodeDataUrl, 'PNG', bcX, bcY, barcodeW, barcodeH);
 
-    // Texto centrado al pie del sticker
     doc.setFontSize(textFontSize);
-    const textY = barcodeY + barcodeH + gapAfterBarcode + textFontSize; // baseline
     const centerX = x + stickerW / 2;
-  
+    const textY = iy + barcodeH + Math.max(8, innerH - barcodeH - 2);
+    //doc.text(`Q. ${price}`, centerX, textY, { align: 'center', baseline: 'alphabetic' });
   };
 
-  for (let i = 0; i < count; i++) {
-    const indexInPage = i % perPage;
-    const row = Math.floor(indexInPage / cols);
-    const col = indexInPage % cols;
+  const perPage = gridCols * gridRows; // 30 por página
 
-    if (i > 0 && indexInPage === 0) {
+  for (let i = 0; i < count; i++) {
+    const idx = i % perPage;
+    const row = Math.floor(idx / gridCols);
+    const col = idx % gridCols;
+
+    if (i > 0 && idx === 0) {
       doc.addPage();
       drawPageFrame();
     }
 
     const cellX = margin + col * (stickerW + gapX);
     const cellY = margin + row * (stickerH + gapY);
-
     drawSticker(cellX, cellY);
   }
 
-  // Guardar (como en tu paso 6)
   doc.save(fileName);
 }
-
-

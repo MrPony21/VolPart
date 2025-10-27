@@ -92,7 +92,7 @@ const generarCodigoBaras = () => {
     return;
   }
   setError("");
-  generatePdfWithBarcode(datos.codigo, logo, qty);
+  generatePdfWithBarcode(datos.codigo,datos.precio, logo, qty);
 };
 
 const handleCantidadStickersChange = (e) => {
