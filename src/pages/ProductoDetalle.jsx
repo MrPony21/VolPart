@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { updateProduct } from '../api/api';
 import Alert from '@mui/material/Alert';
 import { generatePdfWithBarcode } from '../tools/barcode';
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logonuevo.jpg";
 import "../styles/ProductoDetalle.css"
 
 const ProductoDetalle = () => {

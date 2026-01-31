@@ -21,11 +21,27 @@ export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
   const pageH = doc.internal.pageSize.getHeight();
 
   // === Grid fijo: 3 columnas x 10 filas ===
-  const margin = 24;     // ajustable
+  const margin = 30;     // ajustable
   const gridCols = 3;
   const gridRows = 10;
   const gapX = 10;       // separación horizontal
-  const gapY = 6;        // separación vertical
+  const gapY = 5.1;        // separación vertical
+
+  // Utilidad: mm → puntos (1 in = 25.4 mm, 1 in = 72 pt)
+  const mmToPt = (mm) => (mm * 72) / 25.4;
+
+  // Desfase por columna (col 0, 1, 2):
+  //   - primera columna: un poco a la izquierda
+  //   - segunda: sin cambio
+  //   - tercera: un poco a la derecha
+  // Ajusta los mm si lo necesitas (-1, 0, +1 es un buen inicio)
+  const colNudge = [
+    -mmToPt(2),  // columna 0
+     0,          // columna 1
+    +mmToPt(1),  // columna 2
+  ];
+
+
 
   const contentW = pageW - margin * 2;
   const contentH = pageH - margin * 2;
@@ -58,7 +74,7 @@ export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
   const makeBarcodeDataUrl = (targetW, targetH) => {
     const canvas = document.createElement('canvas');
     canvas.width = Math.max(140, targetW * 2);    // @2x nitidez
-    canvas.height = Math.max(60, targetH * 2);
+    canvas.height = Math.max(35, targetH * 2);
 
     JsBarcode(canvas, String(code), {
       format: 'CODE128',
@@ -87,15 +103,15 @@ export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
 
   const drawSticker = (x, y) => {
     const ix = x + pad;
-    const iy = y + pad;
+    const iy = y + 1;
 
     // (opcional) borde del sticker
     // doc.setLineWidth(0.3); doc.rect(x, y, stickerW, stickerH);
 
     if (logoUrl) {
       const logoX = ix;
-      const logoY = iy + Math.floor((innerH - logoBox) / 2);
-      doc.addImage(logoUrl, 'PNG', logoX, logoY, logoBox, logoBox);
+      const logoY = iy ;
+      doc.addImage(logoUrl, 'PNG', logoX, logoY, logoBox, logoBox,);
     }
 
     const bcX = ix + logoBox + logoGap;
@@ -120,7 +136,8 @@ export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
       drawPageFrame();
     }
 
-    const cellX = margin + col * (stickerW + gapX);
+    const baseX = margin + col * (stickerW + gapX);
+    const cellX = baseX + (colNudge[col] || 0); 
     const cellY = margin + row * (stickerH + gapY);
     drawSticker(cellX, cellY);
   }
