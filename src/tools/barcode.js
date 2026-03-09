@@ -73,17 +73,19 @@ export function generatePdfWithBarcode(code, price, logoUrl, fileNameOrCount) {
   // Barcode en dataURL (reutilizable)
   const makeBarcodeDataUrl = (targetW, targetH) => {
     const canvas = document.createElement('canvas');
-    canvas.width = Math.max(140, targetW * 2);    // @2x nitidez
-    canvas.height = Math.max(35, targetH * 2);
+    canvas.width = Math.max(220, targetW * 3);
+    canvas.height = Math.max(80, targetH * 3);
 
     JsBarcode(canvas, String(code), {
       format: 'CODE128',
       displayValue: true,
-      margin: 0,
-      height: canvas.height * 0.75,
+      margin: 8,
+      height: canvas.height * 0.55,
       lineColor: '#000',
       background: '#fff',
-      width: Math.max(1, Math.round(canvas.width / 140)),
+      width: 2,
+      fontSize: 18,
+      textMargin: 6,
     });
     return canvas.toDataURL('image/png');
   };
