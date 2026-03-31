@@ -8,7 +8,7 @@ export function BranchSelector() {
   const [showModal, setShowModal] = useState(false);
   const [tempBranch, setTempBranch] = useState(selectedBranch?.nombreInventario || "");
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const user = localStorage.getItem("user") || "";
 
   if (loading) {
     return <Container>Cargando sucursales...</Container>;
@@ -39,7 +39,7 @@ export function BranchSelector() {
         <LeftSection>
           <UserInfo>
             <Label>Usuario:</Label>
-            <Value>{user.nombre || user.email || "Usuario"}</Value>
+            <Value>{user || "Usuario"}</Value>
           </UserInfo>
         </LeftSection>
 

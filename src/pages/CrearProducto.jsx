@@ -85,7 +85,7 @@ const CrearProducto = () => {
             <div className="header-tab">
                 <h2>Crear Producto</h2>
                 <div className='button-regresar'>
-                    <button className="btn btn-primary regresar-buttom" onClick={() => navigate("/")} >Regresar</button>
+                    <button className="btn btn-primary regresar-buttom" onClick={() => navigate(-1)} >Regresar</button>
                 </div>
             </div>
             {error && (

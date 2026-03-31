@@ -24,18 +24,18 @@ export default function Login() {
         body: JSON.stringify({ username, contrasena: password }),
       });
 
-      console.log("hola",response)
       if (!response.ok) {
         throw new Error('Credenciales inválidas');
       }
 
       const data = await response.json();
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', username);
       navigate('/inventory');
     } catch (err) {
-      console.log(err)
-      setError('Hubo un problema al iniciar sesion, verifica tus credenciales e intenta de nuevo');
-      localStorage.removeItem('token');
+        setError('Hubo un problema al iniciar sesion, verifica tus credenciales e intenta de nuevo');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }

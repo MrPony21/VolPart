@@ -26,10 +26,8 @@ const Inventory = () => {
   
   // Carga inicial
   useEffect(() => {
-    console.log("Sucursal seleccionada en inventory", selectedBranch)
     getProductsByInventory(selectedBranch?.codigoInventario)
       .then(data => {
-        console.log(data)
         setProducts(data)
       })
       .catch(err => console.error(err));
@@ -62,9 +60,9 @@ const Inventory = () => {
     setPage(0);
   };
 
-  const buscarProductoPorCodigo = (codigo) => {
+  const buscarProductoPorUPC = (codigo) => {
     const codigoLimpio = codigo.trim()
-    const producto = products.find(p => p.codigo === codigoLimpio)
+    const producto = products.find(p => p.upc === codigoLimpio)
     console.log("entre",codigoLimpio)
 
     if (producto) {
@@ -113,10 +111,11 @@ const Inventory = () => {
             onChange={handleOnChange}
           />
            <select class="form-select selectInventory"  id="selectInventory" value={filterField} onChange={onChangeSelect} >
-              <option value="codigo">Código</option>
-              <option value="nombre">Nombre</option>
+              <option value="codigoproducto">Código</option>
+              <option value="upc">UPC</option>
+              <option value="nombreproducto">Nombre</option>
               <option value="marca">Marca</option>
-              <option value="cantidad">Cantidad</option>
+              <option value="existencia">Cantidad</option>
               <option value="precio">Precio</option>
             </select>
           
@@ -135,7 +134,7 @@ const Inventory = () => {
 
       <ScannerInput onScan={(code) => {
         console.log("Producto escaneado:", code);
-        buscarProductoPorCodigo(code); // Aquí haces tu búsqueda
+        buscarProductoPorUPC(code); // Aquí haces tu búsqueda
       }} />
 
 
