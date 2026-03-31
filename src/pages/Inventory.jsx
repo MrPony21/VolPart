@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProducts } from '../api/api';
+import { getProducts, getProductsByInventory } from '../api/api';
+import { BranchContext } from '../context/BranchContext';
 import Pagination from '../components/Pagination';
 import ScannerInput from '../tools/ScannerInput';
 import CrearProductoModal from '../components/CrearProductoModal';
@@ -21,12 +22,18 @@ const Inventory = () => {
   const [codigoToModal, setCodigoToModal] = useState("")
 
   const navigate = useNavigate()
+  const { selectedBranch } = useContext(BranchContext);
+  
   // Carga inicial
   useEffect(() => {
-    getProducts()
-      .then(data => setProducts(data))
+    console.log("Sucursal seleccionada en inventory", selectedBranch)
+    getProductsByInventory(selectedBranch?.codigoInventario)
+      .then(data => {
+        console.log(data)
+        setProducts(data)
+      })
       .catch(err => console.error(err));
-  }, []);
+  }, [selectedBranch]);
 
   //Filtrar productos segun el select y input
   const filteredProducts = useMemo(() => {
@@ -147,23 +154,23 @@ const Inventory = () => {
       <table className="table table-hover">
         <thead>
           <tr>
-            <th>#</th>
             <th>Código</th>
+            <th>UPC</th>
             <th>Nombre</th>
             <th>Marca</th>
-            <th>Cantidad</th>
+            <th>Existencia</th>
             <th>Precio</th>
             <th>Ver</th>
           </tr>
         </thead>
         <tbody>
           {(productoFiltrado ? [productoFiltrado] : displayed).map((el, idx) => (
-            <tr key={`${el.codigo}+${idx}`}>
-              <td>{page * rowsPerPage + idx + 1}</td>
-              <td>{el.codigo}</td>
-              <td>{el.nombre}</td>
+            <tr key={`${el.codigoProducto}+${idx}`}>
+              <td>{el.codigoproducto}</td>
+              <td>{el.upc}</td>
+              <td>{el.nombreproducto}</td>
               <td>{el.marca}</td>
-              <td>{el.cantidad}</td>
+              <td>{el.existencia}</td>
               <td>{el.precio}</td>
               <td>
                 <button className="btn btn-outline-secondary" onClick={() => navigate('/ProductoDetalle', {state: { producto: el}})}>Ver</button>

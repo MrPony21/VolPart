@@ -7,11 +7,13 @@ import CargarArchivo from "../pages/CargarArchivo";
 import Ventas from "../pages/Ventas";
 import Clientes from "../pages/Clientes"
 import Sales from "../pages/Sales";
+import Login from "../pages/login";
 
 const AppRouter = () =>{
     return(
         <Routes>
-            <Route path="/" element={<Inventory/>}/>
+            <Route path="/" element={<Login/>}/>
+            <Route path="/Inventory" element={<Inventory/>}/>
             <Route path="/ProductoDetalle" element={<ProductoDetalle/>}/>
             <Route path="/CrearProducto" element={<CrearProducto/>}></Route>
             <Route path="/Ventas" element={<Ventas/>}></Route>

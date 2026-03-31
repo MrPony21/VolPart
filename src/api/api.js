@@ -1,89 +1,174 @@
-import productData from "../../data.json"
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// Helper para obtener headers con Bearer token
+const getAuthHeaders = () => {
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+  };
+  
+  // Agregar sucursal seleccionada si existe
+  const selectedBranch = localStorage.getItem("selectedBranch");
+//   if (selectedBranch) {
+//     headers["X-Branch"] = selectedBranch;
+//   }
+  
+  return headers;
+};
+
+// Helper para manejar respuestas y errores de autenticación
+const handleResponse = async (response) => {
+    console.log("response", response)
+  if (response.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/#/"; // Redirige al login
+    throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente");
+  }
+  
+  // Si no está autorizado (403 Forbidden)
+  if (response.status === 403) {
+    throw new Error("No tienes permisos para realizar esta acción");
+  }
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `Error HTTP ${response.status}`);
+  }
+  
+  return response.json();
+};
+
+//Funciones de inventario
+export async function getInventory(){
+     const response = await fetch(`${API_BASE_URL}/inventario`, {
+        method: "GET",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+}
+// Funciones de Productos
 export async function getProducts(){
-    const productos = await window.api.getProducts()
-    return productos
+    const response = await fetch(`${API_BASE_URL}/Product`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }
 
+export async function getProductsByInventory(inventoryId){
+    const response = await fetch(`${API_BASE_URL}/product/inventario/${inventoryId}`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+}
+
+
 export async function createProduct(product) {
-    const productoNuevo = await window.api.createProduct(product)
-    return productoNuevo
+    const response = await fetch(`${API_BASE_URL}/productos`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(product),
+    });
+    return handleResponse(response);
 }
 
 export async function updateProduct(productoActualizado){
-    // const index = productData.findIndex(p => p.codigo === productoActualizado.codigo);
-    // if(index === -1){
-    //     throw new Error("Producto no encontrado")
-    // }
-
-    // productData[index] = productoActualizado
-    // fs.writeFileSync(dataPath, JSON.stringify(productData, null, 2));
-    // return productoActualizado
-    try{
-        await window.api.updateProduct(productoActualizado)
-        return productoActualizado
-    }catch(err){
-        console.error("Ocurrio un error en la actualizacion del producto", error)
+    try {
+        const response = await fetch(`${API_BASE_URL}/productos/${productoActualizado.id}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(productoActualizado),
+        });
+        return handleResponse(response);
+    } catch(err){
+        console.error("Ocurrió un error en la actualización del producto", err);
+        throw err;
     }
 }
 
-
 export async function callSelectImage(){
     const ruta = await window.api.selectImage();
-    return ruta
+    return ruta;
 }
 
 export async function exportarInventarioJSON(){
     const ruta = await window.api.exportarInventarioEnJson();
-    return ruta
+    return ruta;
 }
 
 export const exportarExcel = async () => {
     const response = await window.api.exportarInventarioEnExcel();
-    return response
+    return response;
 };
 
-
 export async function importProduct(productos){
-    const response = await window.api.importarProductos(productos);
-    return response
+    const response = await fetch(`${API_BASE_URL}/productos/import`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productos),
+    });
+    return handleResponse(response);
 }
 
+// Funciones de Clientes
 export async function getClientes() {
-    const clientes = await window.api.getClientes();
-    return clientes;
+    const response = await fetch(`${API_BASE_URL}/clientes`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }
 
 export async function createCliente(cliente) {
-    const nuevoCliente = await window.api.createCliente(cliente);
-    return nuevoCliente;
+    const response = await fetch(`${API_BASE_URL}/clientes`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(cliente),
+    });
+    return handleResponse(response);
 }
 
 export async function updateCliente(clienteActualizado) {
     try {
-        await window.api.updateCliente(clienteActualizado);
-        return clienteActualizado;
+        const response = await fetch(`${API_BASE_URL}/clientes/${clienteActualizado.nit}`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(clienteActualizado),
+        });
+        return handleResponse(response);
     } catch (err) {
         console.error("Ocurrió un error en la actualización del cliente", err);
+        throw err;
     }
 }
 
 export async function deleteCliente(nit) {
-    const response = await window.api.deleteCliente(nit);
-    return response;
+    const response = await fetch(`${API_BASE_URL}/clientes/${nit}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }
 
+// Funciones de Ventas
 export async function createSale(venta) {
-  // venta: { client, items, total, date }
-  const result = await window.api.createSale(venta);
-  return result; // { nuevaVenta, invoicePath }
+  const response = await fetch(`${API_BASE_URL}/ventas`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(venta),
+  });
+  return handleResponse(response);
 }
 
 export async function getSales() {
-  const ventas = await window.api.getSales();
-  return ventas; 
+  const response = await fetch(`${API_BASE_URL}/ventas`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
 }
-
 
 export async function exportarVentasJSON() {
   const response = await window.api.exportarVentasJson();
@@ -98,12 +183,20 @@ export async function exportarClientesJSON() {
 
 /** Importa un array de ventas (incluso vacío) */
 export async function importVentas(ventas) {
-  const res = await window.api.importarVentas(ventas);
-  return res; // { success, mensaje }
+  const response = await fetch(`${API_BASE_URL}/ventas/import`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(ventas),
+  });
+  return handleResponse(response);
 }
 
 /** Importa un array de clientes (incluso vacío) */
 export async function importClientes(clientes) {
-  const res = await window.api.importarClientes(clientes);
-  return res;
+  const response = await fetch(`${API_BASE_URL}/clientes/import`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clientes),
+  });
+  return handleResponse(response);
 }

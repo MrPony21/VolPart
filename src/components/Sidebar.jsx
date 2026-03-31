@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logoSinFondo.png";
 import { v } from "../styles/Variables";
 import {
   AiOutlineLeft,
@@ -79,7 +79,7 @@ const linksArray = [
   {
     label: "Inventario",
     icon: <InventoryIcon />,
-    to: "/",
+    to: "/Inventory",
   },
   {
     label: "Punto Venta",
@@ -166,10 +166,13 @@ const Container = styled.div`
       }
       cursor: pointer;
       transition: all 0.3s;
-      transform: ${({ isOpen }) => (isOpen ? `scale(0.7)` : `scale(0.7)`)};
+      transform: ${({ isOpen }) => (isOpen ? `scale(0.6)` : `scale(0.7)`)};
     }
     h2 {
       display: ${({ isOpen }) => (isOpen ? `block` : `none`)};
+      margin-right: 60px;
+      font-size: 1.5rem;
+      font-weight: 700;
     }
   }
   .LinkContainer {
