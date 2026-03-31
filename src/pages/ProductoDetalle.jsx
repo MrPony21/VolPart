@@ -92,7 +92,7 @@ const generarCodigoBaras = () => {
     return;
   }
   setError("");
-  generatePdfWithBarcode(datos.codigo,datos.precio, logo, qty);
+  generatePdfWithBarcode(datos.upc,datos.precio, logo, qty);
 };
 
 const handleCantidadStickersChange = (e) => {
@@ -125,7 +125,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>Código:</label>
                         <div className='code-campo'>
-                            <input className="form-control mb-2 modoEdicionInput" value={datos.codigo} readOnly />
+                            <input className="form-control mb-2 modoEdicionInput" value={datos.codigoproducto} readOnly />
 
                             <div className="d-flex align-items-center gap-2 ml-2 mb-2">
                                 <input
@@ -146,10 +146,21 @@ const handleCantidadStickersChange = (e) => {
                         </div>
                     </div>
                     <div>
+                        <label>UPC:</label>
+                        <input 
+                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `} 
+                            value={datos.upc} 
+                            readOnly={!modoEdicion}
+                            name="upc"
+                            onChange={handleChange} 
+                        />
+            
+                    </div>
+                    <div>
                         <label>Nombre:</label>
                         <input
                             className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
-                            value={datos.nombre}
+                            value={datos.nombreproducto}
                             readOnly={!modoEdicion}
                             name="nombre"
                             onChange={handleChange}
@@ -166,10 +177,10 @@ const handleCantidadStickersChange = (e) => {
                         />
                     </div>
                     <div>
-                        <label>Cantidad:</label>
+                        <label>Existencia:</label>
                         <input
                             className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
-                            value={datos.cantidad}
+                            value={datos.existencia}
                             readOnly={!modoEdicion}
                             name="cantidad"
                             onChange={handleChange}
