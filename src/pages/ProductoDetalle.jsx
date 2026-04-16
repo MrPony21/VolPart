@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { updateProduct, getProductIndividual, getProductoByCodigoProductoInventario } from '../api/api';
 import Alert from '@mui/material/Alert';
 import { generatePdfWithBarcode } from '../tools/barcode';
 import logo from "../assets/logonuevo.jpg";
+import { BranchContext } from '../context/BranchContext';
 import "../styles/ProductoDetalle.css"
 
 const ProductoDetalle = () => {
     const location = useLocation();
     const navigate = useNavigate();
+     const { selectedBranch } = useContext(BranchContext);
 
     const productoFromState = location.state?.producto;
     const creadoAlert = location.state?.productoCreado || false;
@@ -36,7 +38,7 @@ const ProductoDetalle = () => {
                     return;
                 }
 
-                const codigoInventario = localStorage.getItem("selectedBranchId");
+                const codigoInventario = selectedBranch?.codigoInventario;
                 console.log("Codigo Producto:", codigoProducto, "Codigo Inventario:", codigoInventario)
 
                 const productoData = await getProductoByCodigoProductoInventario(codigoProducto, codigoInventario );

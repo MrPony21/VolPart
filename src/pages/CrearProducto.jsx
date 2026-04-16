@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "../styles/CrearProducto.css"
 import { agregarInventarioProducto, callSelectImage, createProduct } from '../api/api';
+import { BranchContext } from '../context/BranchContext';
 import Alert from '@mui/material/Alert';
 
 const CrearProducto = () => {
@@ -12,6 +13,7 @@ const CrearProducto = () => {
     const codigo = location.state?.codigo
     const productoExistente = location.state?.productoExistente || false
     const productoDesdeModal = location.state?.producto
+    const { selectedBranch } = useContext(BranchContext);
 
     const [productoNuevo, setProductoNuevo] = useState({
         codigoProducto: productoDesdeModal?.codigoProducto || "",
@@ -66,7 +68,7 @@ const CrearProducto = () => {
             return;
         }   
 
-        const branchId = localStorage.getItem("selectedBranchId");
+        const branchId = selectedBranch?.codigoInventario;
         let productoCasteado;
         
         if(productoExistente) {

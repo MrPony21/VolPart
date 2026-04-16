@@ -8,8 +8,8 @@ import {
   AiOutlineSetting,
 } from "react-icons/ai";
 import { MdOutlineAnalytics, MdLogout } from "react-icons/md";
-import { NavLink } from "react-router-dom";
-import { useContext } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useContext, useState } from "react";
 import { ThemeContext } from "../App";
 import InventoryIcon from '@mui/icons-material/Inventory';
 import SellIcon from '@mui/icons-material/Sell';
@@ -17,14 +17,29 @@ import FaceIcon from '@mui/icons-material/Face';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import Modal from "react-bootstrap/Modal";
+import "../styles/ProductoNoEncontrado.css";
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const ModSidebaropen = () => {
     setSidebarOpen(!sidebarOpen);
   };
   const { setTheme, theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const CambiarTheme = () => {
     setTheme((theme) => (theme === "light" ? "dark" : "light"));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("selectedBranchId");
+    localStorage.removeItem("selectedBranch");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    setShowLogoutModal(false);
+    navigate("/");
   };
 
   return (
@@ -49,6 +64,13 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
           </NavLink>
         </div>
       ))}
+
+      <div className="LinkContainer">
+        <div className="Links" onClick={() => setShowLogoutModal(true)} style={{ cursor: "pointer" }}>
+          <div className="Linkicon" style={{ color: "#dc3545" }}><MdLogout /></div>
+          {sidebarOpen && <span style={{color: "#dc3545"}}>Salir</span>}
+        </div>
+      </div>
 {/* 
       <div className="Themecontent">
         {sidebarOpen && <span className="titletheme">Dark mode</span>}
@@ -70,6 +92,39 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
           </div>
         </div>
       </div> */}
+
+      <Modal
+        show={showLogoutModal}
+        onHide={() => setShowLogoutModal(false)}
+        centered
+        size='lg'
+      >
+        <Modal.Title>
+          <div className="header">
+            <p className="alert">¿Estás seguro de que deseas cerrar sesión?</p>
+          </div>
+        </Modal.Title>
+        <Modal.Body>
+          <div className="card">
+            <div className="actions">
+              <a 
+                className="read" 
+                onClick={handleLogout} 
+                style={{ cursor: "pointer", backgroundColor: "#dc3545" }}
+              >
+                Sí, cerrar sesión
+              </a>
+              <a
+                className="mark-as-read"
+                onClick={() => setShowLogoutModal(false)}
+                style={{ cursor: "pointer" }}
+              >
+                Cancelar
+              </a>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 }

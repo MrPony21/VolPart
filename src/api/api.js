@@ -6,13 +6,6 @@ const getAuthHeaders = () => {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${localStorage.getItem("token")}`,
   };
-  
-  // Agregar sucursal seleccionada si existe
-  const selectedBranch = localStorage.getItem("selectedBranch");
-//   if (selectedBranch) {
-//     headers["X-Branch"] = selectedBranch;
-//   }
-  
   return headers;
 };
 
