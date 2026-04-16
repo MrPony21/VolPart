@@ -14,11 +14,8 @@ export function BranchProvider({ children }) {
     const fetchBranches = async () => {
       try {
         setLoading(true);
-        console.log("aahh")
         const inventory = await getInventory();
-        console.log("inventarios",inventory)
         setBranches(inventory);
-        console.log("primera sucursal",inventory[0])
         // Seleccionar la primera sucursal por defecto
         if (inventory.length > 0) {
           const savedBranch = localStorage.getItem("selectedBranch");
@@ -26,7 +23,6 @@ export function BranchProvider({ children }) {
             ? inventory.find(b => b.nombreInventario === savedBranch) || inventory[0]
             : inventory[0];
 
-            console.log("sucursal a seleccionar",branchToSelect)
           setSelectedBranch(branchToSelect);
           localStorage.setItem("selectedBranchId", String(branchToSelect.codigoInventario));
         }

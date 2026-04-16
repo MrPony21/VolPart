@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { updateProduct } from '../api/api';
+import { updateProduct, getProductIndividual, getProductoByCodigoProductoInventario } from '../api/api';
 import Alert from '@mui/material/Alert';
 import { generatePdfWithBarcode } from '../tools/barcode';
 import logo from "../assets/logonuevo.jpg";
@@ -10,22 +10,55 @@ const ProductoDetalle = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const producto = location.state?.producto;
+    const productoFromState = location.state?.producto;
+    const creadoAlert = location.state?.productoCreado || false;
 
-    if (!producto) {
-        return <div>No se encontró el producto.</div>;
-    }
-
+    const [producto, setProducto] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [modoEdicion, setModoEdicion] = useState(false)
-    const [datos, setDatos] = useState({ ...producto })
-    const [oldDatos, setOldDatos] = useState({ ...producto })
+    const [datos, setDatos] = useState(null)
+    const [oldDatos, setOldDatos] = useState(null)
     const [actualizadoAlert, setActualizadoAlert] = useState(false)
-    //const [creadoAlert, setCreadoAlert] = useState(false)
     const [error, setError] = useState("");
     const [cantidadStickers, setCantidadStickers] = useState(1);
 
+    // Obtener datos del producto desde el endpoint
+    useEffect(() => {
+        const obtenerProducto = async () => {
+            try {
+                setLoading(true);
+                console.log("Producto desde state", productoFromState)
+                const codigoProducto = productoFromState?.codigoproducto;
 
-    const creadoAlert = location.state?.productoCreado || false;
+                if (!codigoProducto) {
+                    setError("No se encontró el código del producto.");
+                    setLoading(false);
+                    return;
+                }
+
+                const codigoInventario = localStorage.getItem("selectedBranchId");
+                console.log("Codigo Producto:", codigoProducto, "Codigo Inventario:", codigoInventario)
+
+                const productoData = await getProductoByCodigoProductoInventario(codigoProducto, codigoInventario );
+                console.log("hola",productoData)
+                
+                if (productoData) {
+                    setProducto(productoData);
+                    setDatos(productoData);
+                    setOldDatos(productoData);
+                } else {
+                    setError("No se pudo obtener los datos del producto.");
+                }
+            } catch (err) {
+                console.error("Error al obtener producto:", err);
+                setError("Error al cargar los datos del producto.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        obtenerProducto();
+    }, [productoFromState]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -103,6 +136,19 @@ const handleCantidadStickersChange = (e) => {
     return (
         <div style={{ padding: 20 }}>
             <h2 >Detalle del Producto</h2>
+            
+            {loading && (
+                <Alert variant="filled" severity="info">
+                    Cargando datos del producto...
+                </Alert>
+            )}
+            
+            {!loading && !producto && (
+                <Alert variant="filled" severity="error">
+                    No se encontró el producto.
+                </Alert>
+            )}
+            
             {actualizadoAlert && (
                 <Alert variant="filled" severity="success">
                     Se ha actualizado correctamente el producto.
@@ -119,8 +165,9 @@ const handleCantidadStickersChange = (e) => {
                 </Alert>
             )}
 
-
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            {!loading && producto && datos && (
+                <>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div style={{ width: "100%" }}>
                     <div>
                         <label>Código:</label>
@@ -148,7 +195,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>UPC:</label>
                         <input 
-                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `} 
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`} 
                             value={datos.upc} 
                             readOnly={!modoEdicion}
                             name="upc"
@@ -159,7 +206,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>Nombre:</label>
                         <input
-                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.nombreproducto}
                             readOnly={!modoEdicion}
                             name="nombre"
@@ -169,7 +216,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>Marca:</label>
                         <input
-                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.marca}
                             readOnly={!modoEdicion}
                             name="marca"
@@ -179,7 +226,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>Existencia:</label>
                         <input
-                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.existencia}
                             readOnly={!modoEdicion}
                             name="cantidad"
@@ -190,7 +237,7 @@ const handleCantidadStickersChange = (e) => {
                     <div>
                         <label>Precio:</label>
                         <input
-                            className={`form-control mb-2" ${!modoEdicion ? "modoEdicionInput" : ""} `}
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.precio}
                             readOnly={!modoEdicion}
                             name="precio"
@@ -227,7 +274,8 @@ const handleCantidadStickersChange = (e) => {
                 )}
 
             </div>
-
+                </>
+            )}
         </div>
     );
 };

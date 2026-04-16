@@ -72,6 +72,14 @@ export async function getProductIndividual(upc){
     return handleResponse(response);    
 }
 
+export async function getProductoByCodigoProductoInventario(codigoProducto, codigoInventario){
+    const response = await fetch(`${API_BASE_URL}/product/search?CodigoProducto=${codigoProducto}&CodigoInventario=${codigoInventario}`, {
+        method: "GET",  
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);    
+}
+
 
 
 export async function createProduct(product) {
