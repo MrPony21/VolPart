@@ -28,6 +28,7 @@ export function BranchProvider({ children }) {
 
             console.log("sucursal a seleccionar",branchToSelect)
           setSelectedBranch(branchToSelect);
+          localStorage.setItem("selectedBranchId", String(branchToSelect.codigoInventario));
         }
       } catch (err) {
         console.error("Error cargando sucursales:", err);
@@ -47,6 +48,7 @@ export function BranchProvider({ children }) {
     if (branch) {
       setSelectedBranch(branch);
       localStorage.setItem("selectedBranch", branchName);
+      localStorage.setItem("selectedBranchId", String(branch.codigoInventario)); 
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "../styles/CrearProducto.css"
-import { callSelectImage, createProduct } from '../api/api';
+import { agregarInventarioProducto, callSelectImage, createProduct } from '../api/api';
 import Alert from '@mui/material/Alert';
 
 const CrearProducto = () => {
@@ -10,18 +10,25 @@ const CrearProducto = () => {
     const [error, setError] = useState("")
 
     const codigo = location.state?.codigo
+    const productoExistente = location.state?.productoExistente || false
+    const productoDesdeModal = location.state?.producto
 
     const [productoNuevo, setProductoNuevo] = useState({
-        codigo: codigo,
-        nombre: "",
-        marca: "",
-        cantidad: "",
-        precio: "",
+        codigoProducto: productoDesdeModal?.codigoProducto || "",
+        upc: productoDesdeModal?.upc || codigo || "",
+        nombreProducto: productoDesdeModal?.nombreProducto || "",
+        marca: productoDesdeModal?.marca || "",
+        existencia: "",
+        precio: productoDesdeModal?.precio || "",
         imagen: ""
     })
 
     const onChangeInput = (e) => {
         const { name, value } = e.target
+        // Si es producto existente, solo permite cambiar existencia y precio
+        if(productoExistente && ['upc', 'nombreProducto', 'marca'].includes(name)) {
+            return
+        }
         setProductoNuevo(prev => ({ ...prev, [name]: value }))
 
     }
@@ -34,11 +41,11 @@ const CrearProducto = () => {
     }
 
     const validarCampos = (producto) => {
-        if (!producto.codigo || !producto.nombre || !producto.marca || !producto.cantidad || !producto.precio) {
+        if (!producto.upc || !producto.nombreProducto || !producto.marca || !producto.existencia || !producto.precio) {
             return "Todos los campos deben estar completos.";
         }
 
-        if (isNaN(producto.cantidad) || parseInt(producto.cantidad) <= 0) {
+        if (isNaN(producto.existencia) || parseInt(producto.existencia) <= 0) {
             return "La cantidad debe ser un número entero mayor a cero.";
         }
 
@@ -59,15 +66,37 @@ const CrearProducto = () => {
             return;
         }   
 
-        const productoCasteado = {
-            ...productoNuevo,
-            cantidad: parseInt(productoNuevo.cantidad),
-            precio: parseFloat(productoNuevo.precio)
-        };
+        const branchId = localStorage.getItem("selectedBranchId");
+        let productoCasteado;
+        
+        if(productoExistente) {
+            // Payload para registrar existencias en producto existente
+            productoCasteado = {
+                codigoProducto: parseInt(productoNuevo.codigoProducto),
+                codigoInventario: branchId ? parseInt(branchId) : null,
+                existencia: parseInt(productoNuevo.existencia),
+                precio: parseFloat(productoNuevo.precio)
+            };
+        } else {
+            // Payload para crear producto nuevo
+            productoCasteado = {
+                ...productoNuevo,
+                existencia: parseInt(productoNuevo.existencia),
+                precio: parseFloat(productoNuevo.precio),
+                urlFoto: "",
+                codigoInventario: branchId ? parseInt(branchId) : null,
+                codigoProducto: productoNuevo.codigoProducto ? parseInt(productoNuevo.codigoProducto) : null
+            };
+        }
 
         console.log(productoCasteado)
         try{
-            const productoCreado = await createProduct(productoCasteado)
+            let productoCreado;
+            if(productoExistente) {
+                productoCreado = await agregarInventarioProducto(productoCasteado)
+            } else {
+                productoCreado = await createProduct(productoCasteado)
+            }
             console.log("ProductoCreadoCorrectamente ", productoCreado)
             navigate('/ProductoDetalle', {state: { producto: productoCreado, productoCreado: true} })
         }catch(err){
@@ -94,26 +123,39 @@ const CrearProducto = () => {
                 </Alert>
             )}
             <div>
+                {productoExistente && (
+                    <div>
+                        <label>Código Producto:</label>
+                        <input className='form-control mb-2' value={productoNuevo.codigoProducto} disabled></input>
+                    </div>
+                )}
                 <div>
-                    <label>Codigó:</label>
-                    <input className='form-control mb-2' value={productoNuevo.codigo} name="codigo" onChange={onChangeInput}></input>
+                    <label>UPC:</label>
+                    <input className='form-control mb-2' value={productoNuevo.upc} name="upc" onChange={onChangeInput} disabled={productoExistente}></input>
                 </div>
                 <div>
                     <label>Nombre:</label>
-                    <input className='form-control mb-2' value={productoNuevo.nombre} name="nombre" onChange={onChangeInput}></input>
+                    <input className='form-control mb-2' value={productoNuevo.nombreProducto} name="nombreProducto" onChange={onChangeInput} disabled={productoExistente}></input>
                 </div>
                 <div>
                     <label>Marca:</label>
-                    <input className='form-control mb-2' value={productoNuevo.marca} name="marca" onChange={onChangeInput}></input>
+                    <input className='form-control mb-2' value={productoNuevo.marca} name="marca" onChange={onChangeInput} disabled={productoExistente}></input>
                 </div>
                 <div>
                     <label>Cantidad:</label>
-                    <input className='form-control mb-2' value={productoNuevo.cantidad} name="cantidad" onChange={onChangeInput}></input>
+                    <input className='form-control mb-2' value={productoNuevo.existencia} name="existencia" onChange={onChangeInput}></input>
                 </div>
                 <div>
                     <label>Precio:</label>
                     <input className='form-control mb-2' value={productoNuevo.precio} name="precio" onChange={onChangeInput}></input>
                 </div>
+                {productoExistente && (
+                    <div style={{ padding: "10px", backgroundColor: "#e3f2fd", borderRadius: "5px", marginTop: "10px" }}>
+                        <p style={{ margin: 0, fontSize: "14px", color: "#1976d2" }}>
+                            <strong>Nota:</strong> Registrando existencias para producto existente. Los campos de UPC, Nombre y Marca están bloqueados.
+                        </p>
+                    </div>
+                )}
             </div>
 
             

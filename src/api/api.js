@@ -64,15 +64,34 @@ export async function getProductsByInventory(inventoryId){
     return handleResponse(response);
 }
 
+export async function getProductIndividual(upc){
+    const response = await fetch(`${API_BASE_URL}/product/search/${upc}`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);    
+}
+
+
 
 export async function createProduct(product) {
-    const response = await fetch(`${API_BASE_URL}/productos`, {
+    const response = await fetch(`${API_BASE_URL}/product`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(product),
     });
     return handleResponse(response);
 }
+
+export async function agregarInventarioProducto(producto){
+    const response = await fetch(`${API_BASE_URL}/product/agregarInventario`, {
+        method: "POST",
+        headers: getAuthHeaders(),  
+        body: JSON.stringify(producto),
+    });
+    return handleResponse(response)
+}
+
 
 export async function updateProduct(productoActualizado){
     try {

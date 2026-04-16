@@ -38,7 +38,6 @@ const ProductoNoEncontrado = ({ show, onHide, codigo }) => {
               className="mark-as-read"
               onClick={onHide}
               style={{ cursor: "pointer" }}
-              href="#"
             >
               Volver
             </a>

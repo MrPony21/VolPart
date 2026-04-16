@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProducts, getProductsByInventory } from '../api/api';
+import { getProducts, getProductsByInventory, getProductIndividual } from '../api/api';
 import { BranchContext } from '../context/BranchContext';
 import Pagination from '../components/Pagination';
 import ScannerInput from '../tools/ScannerInput';
-import CrearProductoModal from '../components/CrearProductoModal';
 import ProductoNoEncontrado from '../components/ProductoNoEncontrado';
+import ProductoSinExistencia from '../components/ProductoSinExistencia';
 import "../styles/inventory.css"
 
 
@@ -16,8 +16,9 @@ const Inventory = () => {
   const [inputValue, setInputValue] = useState("")
   const [productoFiltrado, setProductoFiltrado] = useState(null)
 
-  const [modalShow, setModalShow] = useState(false);
   const [modalProductoNoEncontrado, setModalProductoNoEncontrado] = useState(false)
+  const [modalProductoSinExistencia, setModalProductoSinExistencia] = useState(false)
+  const [productoSinExistencia, setProductoSinExistencia] = useState(null)
   const [filterField, setFilterField] = useState("codigo")
   const [codigoToModal, setCodigoToModal] = useState("")
 
@@ -29,6 +30,7 @@ const Inventory = () => {
     getProductsByInventory(selectedBranch?.codigoInventario)
       .then(data => {
         setProducts(data)
+        limpiarFiltros()
       })
       .catch(err => console.error(err));
   }, [selectedBranch]);
@@ -70,10 +72,26 @@ const Inventory = () => {
       setInputValue(codigoLimpio)
       setProductoFiltrado(producto)
     } else {
-      console.log(`No se encontro producto ${codigo}`)
-      setModalProductoNoEncontrado(true)
-      setProductoFiltrado(null)
-      setCodigoToModal(codigo)
+      //si no se encuentra en este inventario, se busca por la base de datos
+      getProductIndividual(codigoLimpio)
+      .then(producto => {
+        if(producto){
+          console.log("Se encontro en la base de datos", producto)
+          setModalProductoSinExistencia(true)
+          setProductoSinExistencia(producto)
+          setProductoFiltrado(null)
+        } else {
+          console.log(`No se encontro producto ${codigo}`)
+          setModalProductoNoEncontrado(true)
+          setProductoFiltrado(null)
+          setCodigoToModal(codigo)
+        }
+      }).catch(err => {
+        console.log("No se encontro en la base de datos", err)
+        setModalProductoNoEncontrado(true)
+        setProductoFiltrado(null)
+        setCodigoToModal(codigo)
+      })
     }
     //ENCONTRAR SI EXISTE UNA MANERA DE CONFIGURAR EL SCANNER CON SUFIJO ENTER 
   }
@@ -84,11 +102,6 @@ const Inventory = () => {
   }
 
 
-  const crearProducto = () => {
-
-
-  }
-
   const handleOnChange = (event) => {
     setInputValue(event.target.value)
   }
@@ -96,6 +109,12 @@ const Inventory = () => {
   const onChangeSelect = (e) => {
     setFilterField(e.target.value);
     setInputValue("")
+  }
+
+  const limpiarFiltros = () => {
+    setInputValue("") 
+    setFilterField("codigo")
+    setProductoFiltrado(null)
   }
 
   return (
@@ -120,11 +139,7 @@ const Inventory = () => {
             </select>
           
           <button type="button" class="btn btn-secondary button-head" 
-          onClick={() => {
-            setInputValue("") 
-            setFilterField("codigo")
-            setProductoFiltrado(null)
-            }} >Limpiar</button>
+          onClick={() => limpiarFiltros()} >Limpiar</button>
 
         </div>
         <button type="button" class="btn btn-primary" style={{ height: "100%" }} onClick={() => navigate("/CrearProducto")} >Crear Producto</button>
@@ -137,16 +152,16 @@ const Inventory = () => {
         buscarProductoPorUPC(code); // Aquí haces tu búsqueda
       }} />
 
-
-      <CrearProductoModal
-        show={modalShow}
-        onHide={() => setModalShow(false)}
-      />
-
       <ProductoNoEncontrado 
         show={modalProductoNoEncontrado}
         codigo={codigoToModal}
         onHide={() => setModalProductoNoEncontrado(false)}
+      />
+
+      <ProductoSinExistencia
+        show={modalProductoSinExistencia}
+        producto={productoSinExistencia}
+        onHide={() => setModalProductoSinExistencia(false)}
       />
 
 
