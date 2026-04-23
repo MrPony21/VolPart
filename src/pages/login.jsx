@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logoSinFondo.png';
 import '../styles/login.css';
+import { BranchContext } from '../context/BranchContext';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -9,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshBranches } = useContext(BranchContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +33,7 @@ export default function Login() {
       const data = await response.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', username);
+      refreshBranches();
       navigate('/inventory');
     } catch (err) {
         setError('Hubo un problema al iniciar sesion, verifica tus credenciales e intenta de nuevo');
@@ -61,7 +64,7 @@ export default function Login() {
             <input
               id="username"
               type="username"
-              placeholder="Nombre de usuario"
+              placeholder=""
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -76,7 +79,7 @@ export default function Login() {
             <input
               id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder=""
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

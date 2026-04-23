@@ -10,10 +10,11 @@ import "../styles/ProductoDetalle.css"
 const ProductoDetalle = () => {
     const location = useLocation();
     const navigate = useNavigate();
-     const { selectedBranch } = useContext(BranchContext);
+    const { selectedBranch } = useContext(BranchContext);
 
-    const productoFromState = location.state?.producto;
-    const creadoAlert = location.state?.productoCreado || false;
+    const searchParams = new URLSearchParams(location.search);
+    const codigoProductoFromUrl = searchParams.get('codigoProducto');
+    const creadoAlert = searchParams.get('productoCreado') === 'true' || false;
 
     const [producto, setProducto] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -26,28 +27,24 @@ const ProductoDetalle = () => {
 
     // Obtener datos del producto desde el endpoint
     useEffect(() => {
+        if (!selectedBranch || !codigoProductoFromUrl) return
+
         const obtenerProducto = async () => {
             try {
                 setLoading(true);
-                console.log("Producto desde state", productoFromState)
-                const codigoProducto = productoFromState?.codigoproducto;
-
-                if (!codigoProducto) {
-                    setError("No se encontró el código del producto.");
-                    setLoading(false);
-                    return;
-                }
+                console.log("Código desde URL:", codigoProductoFromUrl)
 
                 const codigoInventario = selectedBranch?.codigoInventario;
-                console.log("Codigo Producto:", codigoProducto, "Codigo Inventario:", codigoInventario)
+                console.log("Codigo Producto:", codigoProductoFromUrl, "Codigo Inventario:", codigoInventario)
 
-                const productoData = await getProductoByCodigoProductoInventario(codigoProducto, codigoInventario );
+                const productoData = await getProductoByCodigoProductoInventario(codigoProductoFromUrl, codigoInventario );
                 console.log("hola",productoData)
                 
                 if (productoData) {
                     setProducto(productoData);
                     setDatos(productoData);
                     setOldDatos(productoData);
+                    setError("")
                 } else {
                     setError("No se pudo obtener los datos del producto.");
                 }
@@ -60,7 +57,7 @@ const ProductoDetalle = () => {
         };
 
         obtenerProducto();
-    }, [productoFromState]);
+    }, [codigoProductoFromUrl, selectedBranch]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -137,7 +134,6 @@ const handleCantidadStickersChange = (e) => {
 
     return (
         <div style={{ padding: 20 }}>
-            <h2 >Detalle del Producto</h2>
             
             {loading && (
                 <Alert variant="filled" severity="info">
@@ -161,7 +157,7 @@ const handleCantidadStickersChange = (e) => {
                     Se ha creado correctamente el producto.
                 </Alert>
             )}
-            {error && (
+            {!loading && error && (
                 <Alert variant="filled" severity="error">
                     {error}
                 </Alert>
@@ -171,6 +167,12 @@ const handleCantidadStickersChange = (e) => {
                 <>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div style={{ width: "100%" }}>
+                    
+                    {/* Información del Producto */}
+                    <h4 style={{ marginTop: 20, marginBottom: 15, borderBottom: "2px solid #007bff", paddingBottom: 10, color: "#333" }}>
+                        Información del Producto
+                    </h4>
+                    
                     <div>
                         <label>Código:</label>
                         <div className='code-campo'>
@@ -225,6 +227,12 @@ const handleCantidadStickersChange = (e) => {
                             onChange={handleChange}
                         />
                     </div>
+
+                    {/* Información del Inventario */}
+                    <h4 style={{ marginTop: 25, marginBottom: 15, borderBottom: "2px solid #28a745", paddingBottom: 10, color: "#333" }}>
+                        Información del Inventario
+                    </h4>
+
                     <div>
                         <label>Existencia:</label>
                         <input

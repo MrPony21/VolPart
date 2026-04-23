@@ -68,9 +68,9 @@ const Inventory = () => {
     console.log("entre",codigoLimpio)
 
     if (producto) {
-      console.log("Se encontro", producto)
       setInputValue(codigoLimpio)
       setProductoFiltrado(producto)
+      setFilterField("upc")
     } else {
       //si no se encuentra en este inventario, se busca por la base de datos
       getProductIndividual(codigoLimpio)
@@ -104,16 +104,18 @@ const Inventory = () => {
 
   const handleOnChange = (event) => {
     setInputValue(event.target.value)
+    setProductoFiltrado(null) // Limpiar búsqueda anterior
   }
 
   const onChangeSelect = (e) => {
     setFilterField(e.target.value);
     setInputValue("")
+    setProductoFiltrado(null) // Limpiar búsqueda anterior
   }
 
   const limpiarFiltros = () => {
     setInputValue("") 
-    setFilterField("codigo")
+    setFilterField("codigoproducto")
     setProductoFiltrado(null)
   }
 
@@ -187,7 +189,7 @@ const Inventory = () => {
               <td>{el.existencia}</td>
               <td>{el.precio}</td>
               <td>
-                <button className="btn btn-outline-secondary" onClick={() => navigate('/ProductoDetalle', {state: { producto: el}})}>Ver</button>
+                <button className="btn btn-outline-secondary" onClick={() => navigate(`/ProductoDetalle?codigoProducto=${el.codigoproducto}`)}>Ver</button>
               </td>
             </tr>
           ))}

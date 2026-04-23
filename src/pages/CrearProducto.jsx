@@ -100,7 +100,7 @@ const CrearProducto = () => {
                 productoCreado = await createProduct(productoCasteado)
             }
             console.log("ProductoCreadoCorrectamente ", productoCreado)
-            navigate('/ProductoDetalle', {state: { producto: productoCreado, productoCreado: true} })
+            navigate(`/ProductoDetalle?codigoProducto=${productoCreado.codigoProducto}&productoCreado=true`) 
         }catch(err){
             const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
             setError(mensajeLimpio)
