@@ -94,12 +94,12 @@ export async function agregarInventarioProducto(producto){
 }
 
 
-export async function updateProduct(productoActualizado){
+export async function updateProduct(codigoProducto, payload){
     try {
-        const response = await fetch(`${API_BASE_URL}/productos/${productoActualizado.id}`, {
+        const response = await fetch(`${API_BASE_URL}/product/${codigoProducto}`, {
             method: "PUT",
             headers: getAuthHeaders(),
-            body: JSON.stringify(productoActualizado),
+            body: JSON.stringify(payload),
         });
         return handleResponse(response);
     } catch(err){

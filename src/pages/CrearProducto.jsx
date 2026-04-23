@@ -125,12 +125,27 @@ const CrearProducto = () => {
                 </Alert>
             )}
             <div>
+
+                {productoExistente && (
+                    <div style={{ padding: "10px", backgroundColor: "#e3f2fd", borderRadius: "5px", marginTop: "10px" }}>
+                        <p style={{ margin: 0, fontSize: "14px", color: "#1976d2" }}>
+                            <strong>Nota:</strong> Registrando existencias para producto existente. Los campos de UPC, Nombre y Marca están bloqueados.
+                        </p>
+                    </div>
+                )}
+
+                {/* Información del Producto */}
+                <h4 style={{ marginTop: 20, marginBottom: 15, borderBottom: "2px solid #007bff", paddingBottom: 10, color: "#333" }}>
+                    Información del Producto
+                </h4>
+
                 {productoExistente && (
                     <div>
                         <label>Código Producto:</label>
                         <input className='form-control mb-2' value={productoNuevo.codigoProducto} disabled></input>
                     </div>
                 )}
+
                 <div>
                     <label>UPC:</label>
                     <input className='form-control mb-2' value={productoNuevo.upc} name="upc" onChange={onChangeInput} disabled={productoExistente}></input>
@@ -143,6 +158,12 @@ const CrearProducto = () => {
                     <label>Marca:</label>
                     <input className='form-control mb-2' value={productoNuevo.marca} name="marca" onChange={onChangeInput} disabled={productoExistente}></input>
                 </div>
+
+                {/* Información del Inventario */}
+                <h4 style={{ marginTop: 25, marginBottom: 15, borderBottom: "2px solid #28a745", paddingBottom: 10, color: "#333" }}>
+                    Información del Inventario
+                </h4>
+
                 <div>
                     <label>Cantidad:</label>
                     <input className='form-control mb-2' value={productoNuevo.existencia} name="existencia" onChange={onChangeInput}></input>
@@ -151,13 +172,6 @@ const CrearProducto = () => {
                     <label>Precio:</label>
                     <input className='form-control mb-2' value={productoNuevo.precio} name="precio" onChange={onChangeInput}></input>
                 </div>
-                {productoExistente && (
-                    <div style={{ padding: "10px", backgroundColor: "#e3f2fd", borderRadius: "5px", marginTop: "10px" }}>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#1976d2" }}>
-                            <strong>Nota:</strong> Registrando existencias para producto existente. Los campos de UPC, Nombre y Marca están bloqueados.
-                        </p>
-                    </div>
-                )}
             </div>
 
             

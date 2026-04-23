@@ -25,6 +25,10 @@ const ProductoDetalle = () => {
     const [error, setError] = useState("");
     const [cantidadStickers, setCantidadStickers] = useState(1);
 
+    const CAMPOS_PRODUCTO = ["nombreproducto", "marca", "upc", "urlfoto"];
+    // Campos que pertenecen al inventario  
+    const CAMPOS_INVENTARIO = ["existencia", "precio"];
+
     // Obtener datos del producto desde el endpoint
     useEffect(() => {
         if (!selectedBranch || !codigoProductoFromUrl) return
@@ -62,7 +66,7 @@ const ProductoDetalle = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        if (name === "cantidad") {
+        if (name === "existencia") {
             if (/^\d*$/.test(value)) setDatos(prev => ({ ...prev, [name]: value }))
         } else if (name === "precio") {
             if (/^\d*\.?\d*$/.test(value)) setDatos(prev => ({ ...prev, [name]: value }))
@@ -72,11 +76,12 @@ const ProductoDetalle = () => {
     }
 
     const validarCampos = (producto) => {
-        if (!producto.nombre || !producto.marca || !producto.cantidad || !producto.precio) {
+        console.log("Validando campos:", producto)
+        if (!producto.nombreproducto || !producto.marca || !producto.existencia || !producto.precio) {
             return "Todos los campos deben estar completos.";
         }
 
-        if (isNaN(producto.cantidad) || parseInt(producto.cantidad) <= 0) {
+        if (isNaN(producto.existencia) || parseInt(producto.existencia) <= 0) {
             return "La cantidad debe ser un número entero mayor a cero.";
         }
 
@@ -88,49 +93,71 @@ const ProductoDetalle = () => {
     };
 
 
-    const guardarCambios = async () => {
-        console.log("Datos Actualizados", datos)
 
+    const guardarCambios = async () => {
         const mensajeValidacion = validarCampos(datos);
         if (mensajeValidacion) {
             setError(mensajeValidacion);
             return;
         }
 
-        const productoCasteado = {
-            ...datos,
-            cantidad: parseInt(datos.cantidad),
-            precio: parseFloat(datos.precio)
-        };
+        if (!selectedBranch?.codigoInventario) {
+            setError("No hay una sucursal seleccionada.");
+            return;
+        }
 
+        // Detectar qué cambió
+        const cambioProducto = CAMPOS_PRODUCTO.some(campo => datos[campo] !== oldDatos[campo]);
+        const cambioInventario = CAMPOS_INVENTARIO.some(campo => datos[campo] !== oldDatos[campo]);
+
+        if (!cambioProducto && !cambioInventario) {
+            setModoEdicion(false);
+            return; 
+        }
+
+        // Construir payload según lo que cambió
+        const payload = {};
+
+        if (cambioProducto) {
+            payload.nombreProducto = datos.nombreproducto;
+            payload.marca = datos.marca;
+            payload.upc = datos.upc;
+            // payload.urlFoto = datos.urlfoto;
+        }
+
+        if (cambioInventario) {
+            payload.codigoInventario = selectedBranch?.codigoInventario;
+            payload.existencia = parseInt(datos.existencia);
+            payload.precio = parseFloat(datos.precio);
+        }
 
         try {
-            const actualizado = await updateProduct(productoCasteado)
-            console.log("Datos Actualizados", actualizado)
-            setModoEdicion(false)
-            setOldDatos(actualizado)
-            setDatos(actualizado)
-            setActualizadoAlert(true)
+            const actualizado = await updateProduct(datos.codigoproducto, payload);
+            setModoEdicion(false);
+            setOldDatos(actualizado);
+            setDatos(actualizado);
+            setActualizadoAlert(true);
+            setError("");
         } catch (err) {
-            console.error("Error al actualizar", err)
-            setError(err)
+            console.error("Error al actualizar", err);
+            setError("Error al actualizar el producto.");
         }
+    };
+
+    const generarCodigoBaras = () => {
+    const qty = parseInt(cantidadStickers || "0", 10);
+    if (!Number.isInteger(qty) || qty < 1) {
+        setError("Ingresa una cantidad válida de stickers (entero ≥ 1).");
+        return;
     }
+    setError("");
+    generatePdfWithBarcode(datos.upc,datos.precio, logo, qty);
+    };
 
-const generarCodigoBaras = () => {
-  const qty = parseInt(cantidadStickers || "0", 10);
-  if (!Number.isInteger(qty) || qty < 1) {
-    setError("Ingresa una cantidad válida de stickers (entero ≥ 1).");
-    return;
-  }
-  setError("");
-  generatePdfWithBarcode(datos.upc,datos.precio, logo, qty);
-};
-
-const handleCantidadStickersChange = (e) => {
-  const v = e.target.value;
-  if (/^\d*$/.test(v)) setCantidadStickers(v);
-};
+    const handleCantidadStickersChange = (e) => {
+    const v = e.target.value;
+    if (/^\d*$/.test(v)) setCantidadStickers(v);
+    };
 
     return (
         <div style={{ padding: 20 }}>
@@ -213,7 +240,7 @@ const handleCantidadStickersChange = (e) => {
                             className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.nombreproducto}
                             readOnly={!modoEdicion}
-                            name="nombre"
+                            name="nombreproducto"
                             onChange={handleChange}
                         />
                     </div>
@@ -239,7 +266,7 @@ const handleCantidadStickersChange = (e) => {
                             className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.existencia}
                             readOnly={!modoEdicion}
-                            name="cantidad"
+                            name="existencia"
                             onChange={handleChange}
                             pattern="^\d+$"
                         />
@@ -279,7 +306,7 @@ const handleCantidadStickersChange = (e) => {
                             >Editar</button>
 
                         </div>
-                        <button className="btn btn-primary regresar-buttom" onClick={() => { creadoAlert ? navigate("/") : navigate(-1) }} >Regresar</button>
+                        <button className="btn btn-primary regresar-buttom" onClick={() => { creadoAlert ? navigate("/inventory") : navigate(-1) }} >Regresar</button>
                     </div>
                 )}
 
