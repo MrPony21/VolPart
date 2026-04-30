@@ -1,37 +1,266 @@
-.div-hbusqueda{
+/* ===== DESKTOP (Pantallas grandes) ===== */
+.div-hbusqueda {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 15px;
     margin-top: 20px;
     margin-bottom: 20px;
     height: 40px;
+    padding: 0 20px;
 }
 
-.busqueda{
+.busqueda {
     display: flex;
     width: 80%;
-
+    gap: 10px;
+    align-items: center;
 }
 
-.button-head{
-    margin-left: 30px;
-
+.busqueda input {
+    width: 40%;
+    height: 100%;
+    margin-bottom: 0 !important;
 }
 
-.selectInventory{
+.button-head {
+    margin-left: 0;
+    white-space: nowrap;
+}
+
+.selectInventory {
     width: 150px !important;
-    margin-left: 10px;
-
+    margin-left: 0;
+    min-width: 120px;
 }
 
+/* Tabla responsive */
+.table {
+    width: 100%;
+    margin: 0 20px;
+    max-width: calc(100% - 40px);
+}
 
+.table tbody tr td {
+    padding: 12px 8px;
+    word-break: break-word;
+}
 
+.table thead th {
+    padding: 12px 8px;
+    font-size: 0.95rem;
+}
+
+/* Botones de ver */
+.btn {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+/* Remove spinner de inputs number */
 input.no-spin[type=number]::-webkit-outer-spin-button,
 input.no-spin[type=number]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 /* Firefox */
 input.no-spin[type=number] {
-  -moz-appearance: textfield;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+/* ===== TABLET (768px - 1024px) ===== */
+@media (max-width: 1024px) {
+    .div-hbusqueda {
+        margin: 15px 10px;
+        padding: 0 10px;
+    }
+
+    .busqueda {
+        width: 100%;
+    }
+
+    .selectInventory {
+        width: 120px !important;
+    }
+
+    .table {
+        margin: 0 10px;
+        max-width: calc(100% - 20px);
+        font-size: 0.9rem;
+    }
+
+    .table thead th,
+    .table tbody tr td {
+        padding: 10px 6px;
+    }
+}
+
+/* ===== MÓVIL (menos de 768px) ===== */
+@media (max-width: 767px) {
+    h1 {
+        font-size: 1.5rem;
+        margin: 15px !important;
+    }
+
+    .div-hbusqueda {
+        flex-direction: column;
+        margin: 15px 10px;
+        padding: 0;
+        gap: 10px;
+    }
+
+    .busqueda {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .busqueda input {
+        width: 100%;
+        height: 40px;
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+
+    .selectInventory {
+        width: 100% !important;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .button-head {
+        width: 100%;
+        height: 40px;
+    }
+
+    /* Botón crear producto en móvil */
+    .div-hbusqueda > .btn {
+        width: 100%;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    /* Tabla en tarjetas para móvil */
+    .table-responsive {
+        margin-top: 150px;
+        margin-left: 10px;
+    }
+
+    .table {
+        margin: 0;
+        font-size: 0.85rem;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    /* Ocultar encabezado de tabla en móvil */
+    .table thead {
+        display: none;
+    }
+
+    /* Mostrar como tarjetas */
+    .table tbody {
+        display: block;
+    }
+
+    .table tbody tr {
+        display: block;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .table tbody tr td {
+        display: block;
+        padding: 8px 0;
+        border: none;
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+    .table tbody tr td:first-child {
+        padding-top: 0;
+    }
+
+    .table tbody tr td:last-child {
+        padding-bottom: 0;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+    }
+
+    .table tbody tr td:last-child button {
+        width: 100%;
+    }
+
+    /* Mostrar labels de las columnas */
+    .table tbody tr td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        display: inline-block;
+        width: 80px;
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    /* Botones más pequeños en móvil */
+    .btn {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    .btn-outline-secondary {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        width: 100%;
+    }
+}
+
+/* ===== MÓVIL PEQUEÑO (menos de 480px) ===== */
+@media (max-width: 479px) {
+    h1 {
+        font-size: 1.25rem;
+        margin: 10px !important;
+    }
+
+    .div-hbusqueda {
+        margin: 10px;
+        padding: 0;
+    }
+
+    .busqueda input,
+    .selectInventory,
+    .div-hbusqueda > .btn {
+        height: 36px;
+        font-size: 14px;
+    }
+
+    /* Tarjetas más compactas */
+    .table tbody tr {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    .table tbody tr td {
+        padding: 6px 0;
+        font-size: 0.85rem;
+    }
+
+    .table tbody tr td::before {
+        width: 70px;
+        font-size: 0.75rem;
+    }
+
+    .table tbody tr td:last-child button {
+        width: 100%;
+    }
+
+    .btn-outline-secondary {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
 }

@@ -167,34 +167,36 @@ const Inventory = () => {
       />
 
 
-      <table className="table table-hover">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>UPC</th>
-            <th>Nombre</th>
-            <th>Marca</th>
-            <th>Existencia</th>
-            <th>Precio</th>
-            <th>Ver</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(productoFiltrado ? [productoFiltrado] : displayed).map((el, idx) => (
-            <tr key={`${el.codigoProducto}+${idx}`}>
-              <td>{el.codigoproducto}</td>
-              <td>{el.upc}</td>
-              <td>{el.nombreproducto}</td>
-              <td>{el.marca}</td>
-              <td>{el.existencia}</td>
-              <td>{el.precio}</td>
-              <td>
-                <button className="btn btn-outline-secondary" onClick={() => navigate(`/ProductoDetalle?codigoProducto=${el.codigoproducto}`)}>Ver</button>
-              </td>
+      <div className="table-responsive">
+        <table className="table table-hover">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>UPC</th>
+              <th>Nombre</th>
+              <th>Marca</th>
+              <th>Existencia</th>
+              <th>Precio</th>
+              <th>Ver</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {(productoFiltrado ? [productoFiltrado] : displayed).map((el, idx) => (
+              <tr key={`${el.codigoProducto}+${idx}`}>
+                <td data-label="Código:">{el.codigoproducto}</td>
+                <td data-label="UPC:">{el.upc}</td>
+                <td data-label="Nombre:">{el.nombreproducto}</td>
+                <td data-label="Marca:">{el.marca}</td>
+                <td data-label="Existencia:">{el.existencia}</td>
+                <td data-label="Precio:">{el.precio}</td>
+                <td data-label="">
+                  <button className="btn btn-outline-secondary" onClick={() => navigate(`/ProductoDetalle?codigoProducto=${el.codigoproducto}`)}>Ver</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Paginación */}
       <Pagination

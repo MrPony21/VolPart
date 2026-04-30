@@ -99,18 +99,37 @@ const Container = styled.div`
   background: ${({ theme }) => theme.bg2 || '#f5f5f5'};
   border-bottom: 2px solid ${({ theme }) => theme.bg3 || '#ddd'};
   gap: 30px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
 `;
 
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 15px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
 `;
 
 const RightSection = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 `;
 
 const UserInfo = styled.div`
@@ -121,6 +140,12 @@ const UserInfo = styled.div`
   background: ${({ theme }) => theme.bg || 'white'};
   border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.bg3 || '#ddd'};
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 10px 12px;
+    justify-content: space-between;
+  }
 `;
 
 const BranchInfo = styled.div`
@@ -131,6 +156,12 @@ const BranchInfo = styled.div`
   background: ${({ theme }) => theme.bg || 'white'};
   border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.bg3 || '#ddd'};
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 10px 12px;
+    justify-content: space-between;
+  }
 `;
 
 const SelectContainer = styled.div`
@@ -145,12 +176,22 @@ const Label = styled.span`
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+    white-space: nowrap;
+  }
 `;
 
 const Value = styled.span`
   font-weight: 700;
   color: ${({ theme }) => theme.text || '#000'};
   font-size: 14px;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    text-align: right;
+  }
 `;
 
 const Select = styled.select`
@@ -197,6 +238,11 @@ const ChangeButton = styled.button`
   &:active {
     transform: translateY(0);
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    min-height: 42px;
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -219,6 +265,12 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 400px;
   overflow: hidden;
+
+  @media (max-width: 480px) {
+    width: calc(100% - 24px);
+    max-width: none;
+    border-radius: 10px;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -227,6 +279,10 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   padding: 20px;
   border-bottom: 1px solid #e5e7eb;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 `;
 
 const ModalTitle = styled.h2`
@@ -234,6 +290,10 @@ const ModalTitle = styled.h2`
   font-size: 18px;
   font-weight: 700;
   color: #111827;
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -257,6 +317,10 @@ const CloseButton = styled.button`
 
 const ModalBody = styled.div`
   padding: 20px;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 `;
 
 const SelectLabel = styled.label`
@@ -296,6 +360,11 @@ const ModalFooter = styled.div`
   padding: 20px;
   border-top: 1px solid #e5e7eb;
   justify-content: flex-end;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+    flex-direction: column;
+  }
 `;
 
 const CancelButton = styled.button`
@@ -311,6 +380,10 @@ const CancelButton = styled.button`
 
   &:hover {
     background: #d1d5db;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
   }
 `;
 
@@ -332,5 +405,9 @@ const ConfirmButton = styled.button`
   &:disabled {
     background: #9ca3af;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
   }
 `;

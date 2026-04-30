@@ -162,46 +162,48 @@ const Usuarios = () => {
           No hay usuarios registrados aún.
         </Alert>
       ) : (
-        <table className="table table-hover">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Usuario</th>
-              <th>Rol</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map((usuario) => (
-              <tr key={usuario.CodigoUsuario}>
-                <td>{usuario.CodigoUsuario}</td>
-                <td>{usuario.NombreUsuario}</td>
-                <td>
-                  <span
-                    style={{
-                      backgroundColor: getRolColor(usuario.NombreRol),
-                      color: "white",
-                      padding: "5px 10px",
-                      borderRadius: "5px",
-                      fontSize: "12px",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {usuario.NombreRol}
-                  </span>
-                </td>
-                <td>
-                  <button
-                    className="btn btn-sm btn-warning me-2"
-                    onClick={() => abrirEditarUsuario(usuario)}
-                  >
-                    Editar
-                  </button>
-                </td>
+        <div className="table-responsive" style={{marginTop: "50px"}}>
+          <table className="table table-hover">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {usuarios.map((usuario) => (
+                <tr key={usuario.CodigoUsuario}>
+                  <td data-label="Código:">{usuario.CodigoUsuario}</td>
+                  <td data-label="Usuario:">{usuario.NombreUsuario}</td>
+                  <td data-label="Rol:">
+                    <span
+                      style={{
+                        backgroundColor: getRolColor(usuario.NombreRol),
+                        color: "white",
+                        padding: "5px 10px",
+                        borderRadius: "5px",
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      {usuario.NombreRol}
+                    </span>
+                  </td>
+                  <td data-label="Acciones:">
+                    <button
+                      className="btn btn-sm btn-warning me-2"
+                      onClick={() => abrirEditarUsuario(usuario)}
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       {/* Modal para editar usuario */}

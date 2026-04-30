@@ -21,7 +21,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import Modal from "react-bootstrap/Modal";
 import "../styles/ProductoNoEncontrado.css";
 
-export function Sidebar({ sidebarOpen, setSidebarOpen }) {
+export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
   const ModSidebaropen = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -44,7 +44,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
   };
 
   return (
-    <Container isOpen={sidebarOpen} themeUse={theme}>
+    <Container isOpen={sidebarOpen} isMobile={isMobile} themeUse={theme}>
       <button className="Sidebarbutton" onClick={ModSidebaropen}>
         <AiOutlineLeft />
       </button>
@@ -52,7 +52,9 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }) {
         <div className="imgcontent">
           <img src={logo} />
         </div>
-        <h2>APVolks</h2>
+        {!isMobile && (
+          <h2>APVolks</h2>
+        )}
       </div>
       {linksArray.map(({ icon, label, to }) => (
         <div className="LinkContainer" key={label}>
@@ -153,6 +155,11 @@ const linksArray = [
     to: "/Clientes",
   },
   {
+    label: "Usuarios",
+    icon: <PeopleIcon />,
+    to: "/Usuarios",
+  },
+  {
     label: "Reportes",
     icon: <DescriptionIcon/>,
     to: "/Reportes",
@@ -161,11 +168,6 @@ const linksArray = [
     label: "Importar",
     icon: <FileUploadIcon />,
     to: "/CargarArchivo",
-  },
-  {
-    label: "Usuarios",
-    icon: <PeopleIcon />,
-    to: "/Usuarios",
   },
 ];
 const secondarylinksArray = [
@@ -188,6 +190,20 @@ const Container = styled.div`
   background: ${(props) => props.theme.bg};
   position: sticky;
   padding-top: 20px;
+  transition: transform 0.3s ease, width 0.3s ease, box-shadow 0.3s ease;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(280px, 82vw);
+    z-index: 1000;
+    overflow-y: auto;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.18);
+    transform: ${({ isOpen }) => (isOpen ? "translateX(0)" : "translateX(-100%)")};
+  }
+
   .Sidebarbutton {
     position: absolute;
     top: ${v.xxlSpacing};
@@ -265,6 +281,51 @@ const Container = styled.div`
           }
         }
       }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding-top: 16px;
+
+    .Sidebarbutton {
+      top: 16px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+    }
+
+    .Logocontent {
+      padding-bottom: 18px;
+
+      .imgcontent {
+        transform: ${({ isOpen }) => (isOpen ? `scale(0.75)` : `scale(0.75)`)};
+      }
+
+      h2 {
+        margin-right: 0;
+        font-size: 1.25rem;
+      }
+    }
+
+    .LinkContainer {
+      padding: 0 10%;
+      margin: 6px 0;
+
+      .Links {
+        height: 46px;
+
+        .Linkicon svg {
+          font-size: 22px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    width: min(300px, 86vw);
+
+    .LinkContainer {
+      padding: 0 8%;
     }
   }
   .Themecontent {

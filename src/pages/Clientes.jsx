@@ -106,33 +106,35 @@ const Clientes = () => {
                 </div>
                 <button type="button" className="btn btn-primary" style={{ height: "100%" }} onClick={() => handleOpenModal()} >Crear Cliente</button>
             </div>
-            <table className="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>NIT</th>
-                        <th>Nombre</th>
-                        <th>Teléfono</th>
-                        <th>Dirección</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredClientes.map((el, idx) => (
-                        <tr key={el.nit}>
-                            <td>{el.codigoCliente}</td>
-                            <td>{el.nit}</td>
-                            <td>{el.nombreCliente}</td>
-                            <td>{el.telefono}</td>
-                            <td>{el.direccion}</td>
-                            <td>
-                                <button className="btn btn-outline-secondary btn-sm" style={{ marginRight: 8 }} onClick={() => handleOpenModal(el)}>Editar</button>
-                                {/* <button className="btn btn-danger btn-sm" onClick={() => handleDeleteCliente(el.nit)}>Eliminar</button> */}
-                            </td>
+            <div className="table-responsive">
+                <table className="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>NIT</th>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Acciones</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {filteredClientes.map((el, idx) => (
+                            <tr key={el.nit}>
+                                <td data-label="Código:">{el.codigoCliente}</td>
+                                <td data-label="NIT:">{el.nit}</td>
+                                <td data-label="Nombre:">{el.nombreCliente}</td>
+                                <td data-label="Teléfono:">{el.telefono}</td>
+                                <td data-label="Dirección:">{el.direccion}</td>
+                                <td data-label="Acciones:">
+                                    <button className="btn btn-outline-secondary btn-sm" style={{ marginRight: 8 }} onClick={() => handleOpenModal(el)}>Editar</button>
+                                    {/* <button className="btn btn-danger btn-sm" onClick={() => handleDeleteCliente(el.nit)}>Eliminar</button> */}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
             {modalShow && (
                 <ClienteModal
                     show={modalShow}
