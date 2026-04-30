@@ -8,6 +8,8 @@ import Ventas from "../pages/Ventas";
 import Clientes from "../pages/Clientes"
 import Sales from "../pages/Sales";
 import Login from "../pages/login";
+import Usuarios from "../pages/Usuarios";
+import RegistrarUsuarios from "../pages/RegistrarUsuarios";
 
 const AppRouter = () =>{
     return(
@@ -21,6 +23,8 @@ const AppRouter = () =>{
             <Route path="/Reportes" element={<Reportes/>}></Route>
             <Route path="/CargarArchivo" element={<CargarArchivo/>}></Route>
             <Route path="/Sales" element={<Sales/>}></Route>
+            <Route path="/Usuarios" element={<Usuarios/>}></Route>
+            <Route path="/CrearUsuario" element={<RegistrarUsuarios/>}></Route>
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     )

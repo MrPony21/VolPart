@@ -17,6 +17,7 @@ import FaceIcon from '@mui/icons-material/Face';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
+import PeopleIcon from '@mui/icons-material/People';
 import Modal from "react-bootstrap/Modal";
 import "../styles/ProductoNoEncontrado.css";
 
@@ -160,6 +161,11 @@ const linksArray = [
     label: "Importar",
     icon: <FileUploadIcon />,
     to: "/CargarArchivo",
+  },
+  {
+    label: "Usuarios",
+    icon: <PeopleIcon />,
+    to: "/Usuarios",
   },
 ];
 const secondarylinksArray = [

@@ -1,3 +1,5 @@
+import { getFormControlUtilityClasses } from "@mui/material";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Helper para obtener headers con Bearer token
@@ -134,7 +136,7 @@ export async function importProduct(productos){
 
 // Funciones de Clientes
 export async function getClientes() {
-    const response = await fetch(`${API_BASE_URL}/clientes`, {
+    const response = await fetch(`${API_BASE_URL}/cliente`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
@@ -142,7 +144,7 @@ export async function getClientes() {
 }
 
 export async function createCliente(cliente) {
-    const response = await fetch(`${API_BASE_URL}/clientes`, {
+    const response = await fetch(`${API_BASE_URL}/cliente`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(cliente),
@@ -150,9 +152,9 @@ export async function createCliente(cliente) {
     return handleResponse(response);
 }
 
-export async function updateCliente(clienteActualizado) {
+export async function updateCliente(codigoCliente, clienteActualizado) {
     try {
-        const response = await fetch(`${API_BASE_URL}/clientes/${clienteActualizado.nit}`, {
+        const response = await fetch(`${API_BASE_URL}/cliente/${codigoCliente}`, {
             method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(clienteActualizado),
@@ -219,4 +221,43 @@ export async function importClientes(clientes) {
       body: JSON.stringify(clientes),
   });
   return handleResponse(response);
+}
+
+// Funciones de Usuarios
+export async function registrarUsuario(usuario) {
+  const response = await fetch(`${API_BASE_URL}/usuario`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      NombreUsuario: usuario.nombre,
+      contrasena: usuario.password,
+      CodigoRol: Number(usuario.rol)
+    }),
+  });
+  return handleResponse(response);
+}
+
+export async function obtenerUsuarios() {
+  const response = await fetch(`${API_BASE_URL}/usuario`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+export async function actualizarUsuario(usuarioId, usuario) {
+  const response = await fetch(`${API_BASE_URL}/usuario/${usuarioId}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(usuario),
+  });
+  return handleResponse(response);
+}
+
+export async function getRoles() {
+    const response = await fetch(`${API_BASE_URL}/usuario/roles`, {
+        method: "GET", 
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 }

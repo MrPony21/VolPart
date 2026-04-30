@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createCliente, updateCliente, deleteCliente, getClientes } from '../api/api';
+import Alert from '@mui/material/Alert';
 import '../styles/inventory.css';
 
 const Clientes = () => {
@@ -8,6 +9,7 @@ const Clientes = () => {
     const [filterField, setFilterField] = useState("nit");
     const [modalShow, setModalShow] = useState(false);
     const [clienteEdit, setClienteEdit] = useState(null);
+    const [error, setError] = useState("");
 
     // Filtrar clientes
     const filteredClientes = useMemo(() => {
@@ -20,10 +22,14 @@ const Clientes = () => {
     }, [clientes, filterField, inputValue]);
 
     useEffect(() => {
+        obtenerClientes();
+    }, []);
+
+    const obtenerClientes = () => {
         getClientes()
             .then(data => setClientes(data))
             .catch(err => console.error(err));
-    }, []);
+    }
 
 
     // Abrir modal para crear o editar
@@ -34,24 +40,35 @@ const Clientes = () => {
 
     // Guardar cliente
     const handleSaveCliente = async (nuevoCliente) => {
-        if (clienteEdit) {
-            // Editar
-            setClientes(prev => prev.map(c => c.nit === clienteEdit.nit ? nuevoCliente : c));
-        } else {
-            // Crear
-            setClientes(prev => [...prev, nuevoCliente]);
+        const payload = {
+            nombreCliente: nuevoCliente.nombreCliente,
+            nit: nuevoCliente.nit,
+            telefono: nuevoCliente.telefono,
+            direccion: nuevoCliente.direccion
+        };
 
-            console.log(nuevoCliente)
-            try {
-                const clienteCreado = await createCliente(nuevoCliente)
-                console.log("ClienteCreadoCorrectamente ", clienteCreado)
-            } catch (err) {
-                const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
-                //setError(mensajeLimpio)
-                console.error("Ocurrio un error al crear su producto", err)
+        try {
+            if (clienteEdit) {
+                // Editar
+                setClientes(prev => prev.map(c => c.nit === clienteEdit.nit ? nuevoCliente : c));
+                const clienteActualizado = await updateCliente(clienteEdit.nit, payload);
+                console.log("ClienteActualizadoCorrectamente ", clienteActualizado);
+                obtenerClientes();
+                setError("");
+            } else {
+                // Crear
+                setClientes(prev => [...prev, nuevoCliente]);
+                const clienteCreado = await createCliente(payload);
+                console.log("ClienteCreadoCorrectamente ", clienteCreado);
+                obtenerClientes();
+                setError("");
             }
-
-
+        } catch (err) {
+            const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
+            setError(mensajeLimpio);
+            console.error("Ocurrió un error al guardar el cliente", err);
+            // Revertir cambios si hubo error
+            obtenerClientes();
         }
         setModalShow(false);
         setClienteEdit(null);
@@ -65,6 +82,11 @@ const Clientes = () => {
     return (
         <div style={{ padding: 30 }}>
             <h1 style={{ margin: "20px" }}>Clientes</h1>
+            {error && (
+                <Alert variant="filled" severity="error" style={{ marginBottom: 20 }}>
+                    {error}
+                </Alert>
+            )}
             <div className='div-hbusqueda'>
                 <div className='busqueda'>
                     <input
@@ -76,7 +98,7 @@ const Clientes = () => {
                     />
                     <select className="form-select selectInventory" value={filterField} onChange={e => setFilterField(e.target.value)}>
                         <option value="nit">NIT</option>
-                        <option value="nombre">Nombre</option>
+                        <option value="nombreCliente">Nombre</option>
                         <option value="telefono">Teléfono</option>
                         <option value="direccion">Dirección</option>
                     </select>
@@ -87,7 +109,7 @@ const Clientes = () => {
             <table className="table table-hover">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>Código</th>
                         <th>NIT</th>
                         <th>Nombre</th>
                         <th>Teléfono</th>
@@ -98,14 +120,14 @@ const Clientes = () => {
                 <tbody>
                     {filteredClientes.map((el, idx) => (
                         <tr key={el.nit}>
-                            <td>{idx + 1}</td>
+                            <td>{el.codigoCliente}</td>
                             <td>{el.nit}</td>
-                            <td>{el.nombre}</td>
+                            <td>{el.nombreCliente}</td>
                             <td>{el.telefono}</td>
                             <td>{el.direccion}</td>
                             <td>
                                 <button className="btn btn-outline-secondary btn-sm" style={{ marginRight: 8 }} onClick={() => handleOpenModal(el)}>Editar</button>
-                                <button className="btn btn-danger btn-sm" onClick={() => handleDeleteCliente(el.nit)}>Eliminar</button>
+                                {/* <button className="btn btn-danger btn-sm" onClick={() => handleDeleteCliente(el.nit)}>Eliminar</button> */}
                             </td>
                         </tr>
                     ))}
@@ -125,43 +147,55 @@ const Clientes = () => {
 
 // Modal para crear/editar cliente
 function ClienteModal({ show, cliente, onSave, onHide }) {
-    const [form, setForm] = useState(cliente || { nit: '', nombre: '', telefono: '', direccion: '' });
+    const [form, setForm] = useState(cliente || { nit: '', nombreCliente: '', telefono: '', direccion: '' });
+    const [error, setError] = useState("");
 
     const handleChange = e => {
         const { name, value } = e.target;
         setForm(prev => ({ ...prev, [name]: value }));
+        setError(""); // Limpiar error al editar un campo
     };
 
     const handleSubmit = e => {
         e.preventDefault();
-        if (!form.nit || !form.nombre) return;
+        if (!form.nit || !form.nombreCliente || !form.telefono || !form.direccion) {
+            setError("Todos los campos deben estar completos para avanzar");
+            return;
+        }
         onSave(form);
     };
 
     if (!show) return null;
     return (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <form onSubmit={handleSubmit} style={{ background: '#fff', padding: 30, borderRadius: 8, minWidth: 320, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                <h4>{cliente ? 'Editar Cliente' : 'Crear Cliente'}</h4>
-                <div className="mb-3">
-                    <label>NIT</label>
-                    <input type="number" name="nit" value={form.nit} onChange={handleChange} className="form-control no-spin" required />
+            <form onSubmit={handleSubmit} style={{ background: '#fff', padding: 30, borderRadius: 8, width: 400, boxShadow: '0 2px 8px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ marginTop: 0 }}>{cliente ? 'Editar Cliente' : 'Crear Cliente'}</h4>
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {error && (
+                        <Alert variant="filled" severity="error" style={{ marginBottom: 20 }}>
+                            {error}
+                        </Alert>
+                    )}
+                    <div className="mb-3">
+                        <label>NIT</label>
+                        <input type="number" name="nit" value={form.nit} onChange={handleChange} className="form-control no-spin" required />
+                    </div>
+                    <div className="mb-3">
+                        <label>Nombre</label>
+                        <input type="text" name="nombreCliente" value={form.nombreCliente} onChange={handleChange} className="form-control" required />
+                    </div>
+                    <div className="mb-3">
+                        <label>Teléfono</label>
+                        <input type="number" name="telefono" value={form.telefono} onChange={handleChange} className="form-control no-spin" />
+                    </div>
+                    <div className="mb-3">
+                        <label>Dirección</label>
+                        <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className="form-control" />
+                    </div>
                 </div>
-                <div className="mb-3">
-                    <label>Nombre</label>
-                    <input type="text" name="nombre" value={form.nombre} onChange={handleChange} className="form-control" required />
-                </div>
-                <div className="mb-3">
-                    <label>Teléfono</label>
-                    <input type="number" name="telefono" value={form.telefono} onChange={handleChange} className="form-control no-spin" />
-                </div>
-                <div className="mb-3">
-                    <label>Dirección</label>
-                    <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className="form-control" />
-                </div>
-                <div style={{ textAlign: 'right', marginTop: 18 }}>
+                <div style={{ textAlign: 'right', marginTop: 18, borderTop: '1px solid #eee', paddingTop: 18 }}>
                     <button type="button" className="btn btn-secondary" style={{ marginRight: 8 }} onClick={onHide}>Cancelar</button>
-                    <button type="submit" className="btn btn-primary">Guardar</button>
+                    <button type="submit" className="btn btn-primary">{cliente ? "Guardar" : "Crear"}</button>
                 </div>
             </form>
         </div>

@@ -18,6 +18,7 @@ const Ventas = () => {
   const [cantidadEdit, setCantidadEdit] = useState(1);
   const [modalAlert, setModalAlert] = useState("");
   const [clientes, setClientes] = useState([]);
+  const [clienteEncontrado, setClienteEncontrado] = useState(false);
 
 
   useEffect(() => {
@@ -40,10 +41,11 @@ const Ventas = () => {
       if (encontrado) {
         setCliente({
           nit: encontrado.nit,
-          nombre: encontrado.nombre,
+          nombre: encontrado.nombreCliente,
           telefono: encontrado.telefono,
           direccion: encontrado.direccion,
         });
+        setClienteEncontrado(true);
       }
       else {
         setCliente(prev => ({
@@ -53,6 +55,7 @@ const Ventas = () => {
           telefono: '',
           direccion: '',
         }));
+        setClienteEncontrado(false);
       }
     }
     else {
@@ -187,6 +190,7 @@ const handleVenta = async () => {
               placeholder="Nombre"
               value={cliente.nombre}
               onChange={handleClienteChange}
+              disabled={clienteEncontrado}
             />
           </div>
         </div>
@@ -200,6 +204,7 @@ const handleVenta = async () => {
               placeholder="Teléfono"
               value={cliente.telefono}
               onChange={handleClienteChange}
+              disabled={clienteEncontrado}
             />
           </div>
           <div className="ventas-datosfactura-input-group">
@@ -211,6 +216,7 @@ const handleVenta = async () => {
               placeholder="Dirección"
               value={cliente.direccion}
               onChange={handleClienteChange}
+              disabled={clienteEncontrado}
             />
           </div>
         </div>
