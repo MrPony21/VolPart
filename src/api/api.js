@@ -125,8 +125,8 @@ export const exportarExcel = async () => {
     return response;
 };
 
-export async function importProduct(productos){
-    const response = await fetch(`${API_BASE_URL}/productos/import`, {
+export async function importProduct(productos, codigoInventario){
+    const response = await fetch(`${API_BASE_URL}/product/import?codigoInventario=${codigoInventario}`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(productos),
