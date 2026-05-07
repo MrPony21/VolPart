@@ -51,7 +51,7 @@ const Clientes = () => {
             if (clienteEdit) {
                 // Editar
                 setClientes(prev => prev.map(c => c.nit === clienteEdit.nit ? nuevoCliente : c));
-                const clienteActualizado = await updateCliente(clienteEdit.nit, payload);
+                const clienteActualizado = await updateCliente(clienteEdit.codigoCliente, payload);
                 console.log("ClienteActualizadoCorrectamente ", clienteActualizado);
                 obtenerClientes();
                 setError("");

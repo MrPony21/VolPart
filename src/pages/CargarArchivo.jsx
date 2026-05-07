@@ -49,6 +49,15 @@ const CargarArchivo = () => {
     }));
   };
 
+  const transformClienteData = (clientes) => {
+    return clientes.map(cliente => ({
+      nombreCliente: cliente.nombre || '',
+      nit: cliente.nit || '',
+      telefono: cliente.telefono || '',
+      direccion: cliente.direccion || ''
+    }));
+  };
+
   const handleBranchSelection = (branchId) => {
     setSelectedBranch(branchId);
     setShowBranchSelection(false);
@@ -70,6 +79,11 @@ const CargarArchivo = () => {
           return;
         }
         array = transformProductData(array, selectedBranch);
+      }
+      
+      // Si es importación de clientes, transformar los datos
+      if (typeToImport === 'clientes') {
+        array = transformClienteData(array);
       }
       
       // Si el JSON está vacío, preguntar confirmación

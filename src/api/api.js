@@ -3,13 +3,17 @@ import { getFormControlUtilityClasses } from "@mui/material";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Helper para obtener headers con Bearer token
-const getAuthHeaders = () => {
+const getAuthHeaders = (isFormData = false) => {
   const headers = {
-    "Content-Type": "application/json",
     "Authorization": `Bearer ${localStorage.getItem("token")}`,
   };
+
+  if (!isFormData) {
+    headers["Content-Type"] = "application/json";
+  }
+
   return headers;
-};
+}
 
 // Helper para manejar respuestas y errores de autenticación
 const handleResponse = async (response) => {
@@ -78,12 +82,14 @@ export async function getProductoByCodigoProductoInventario(codigoProducto, codi
 
 
 export async function createProduct(product) {
-    const response = await fetch(`${API_BASE_URL}/product`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(product),
-    });
-    return handleResponse(response);
+  const isFormData = product instanceof FormData;
+  const response = await fetch(`${API_BASE_URL}/product`, {
+    method: 'POST',
+    headers: getAuthHeaders(isFormData),
+    body: isFormData ? product : JSON.stringify(product)
+  });
+
+  return handleResponse(response);
 }
 
 export async function agregarInventarioProducto(producto){
@@ -215,7 +221,7 @@ export async function importVentas(ventas) {
 
 /** Importa un array de clientes (incluso vacío) */
 export async function importClientes(clientes) {
-  const response = await fetch(`${API_BASE_URL}/clientes/import`, {
+  const response = await fetch(`${API_BASE_URL}/cliente/import`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(clientes),

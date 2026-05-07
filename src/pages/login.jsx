@@ -18,16 +18,30 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Aquí integra tu API de login
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, contrasena: password }),
-      });
+
+      let response;
+      try {
+        response = await fetch(`${apiUrl}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, contrasena: password }),
+          signal: AbortSignal.timeout(8000), // Timeout de 8 segundos
+        });
+      } catch (networkErr) {
+        
+        if (networkErr.name === 'TimeoutError') {
+          throw new Error('TIMEOUT');
+        }
+        throw new Error('NETWORK');
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        throw new Error('INVALID_CREDENTIALS');
+      }
 
       if (!response.ok) {
-        throw new Error('Credenciales inválidas');
+        throw new Error('SERVER_ERROR');
       }
 
       const data = await response.json();
@@ -35,10 +49,18 @@ export default function Login() {
       localStorage.setItem('user', username);
       refreshBranches();
       navigate('/inventory');
+
     } catch (err) {
-        setError('Hubo un problema al iniciar sesion, verifica tus credenciales e intenta de nuevo');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+      const messages = {
+        NETWORK:           'No se pudo conectar al servidor. Verifica tu conexión a internet.',
+        TIMEOUT:           'El servidor tardó demasiado en responder. Intenta de nuevo.',
+        INVALID_CREDENTIALS: 'Usuario o contraseña incorrectos.',
+        SERVER_ERROR:      'Error interno del servidor. Intenta más tarde.',
+      };
+
+      setError(messages[err.message] ?? 'Ocurrió un error inesperado. Intenta de nuevo.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }

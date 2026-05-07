@@ -14,6 +14,8 @@ const CrearProducto = () => {
     const productoExistente = location.state?.productoExistente || false
     const productoDesdeModal = location.state?.producto
     const { selectedBranch } = useContext(BranchContext);
+    const [imagenFile, setImagenFile] = useState(null);
+    const [imagenPreview, setImagenPreview] = useState(null);
 
     const [productoNuevo, setProductoNuevo] = useState({
         codigoProducto: productoDesdeModal?.codigoProducto || "",
@@ -34,6 +36,14 @@ const CrearProducto = () => {
         setProductoNuevo(prev => ({ ...prev, [name]: value }))
 
     }
+
+    const onChangeImagen = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setImagenFile(file); // el File real para enviar a la API
+        setImagenPreview(URL.createObjectURL(file)); // preview local sin subir nada
+    };
 
     const seleccionarImagen = async () => {
         const ruta = await callSelectImage()
@@ -61,55 +71,49 @@ const CrearProducto = () => {
 
 
     const crear = async () => {
-
         const mensajeValidacion = validarCampos(productoNuevo);
         if (mensajeValidacion) {
             setError(mensajeValidacion);
             return;
-        }   
+        }
 
         const branchId = selectedBranch?.codigoInventario;
-        let productoCasteado;
-        
-        if(productoExistente) {
-            // Payload para registrar existencias en producto existente
-            productoCasteado = {
-                codigoProducto: parseInt(productoNuevo.codigoProducto),
-                codigoInventario: branchId ? parseInt(branchId) : null,
-                existencia: parseInt(productoNuevo.existencia),
-                precio: parseFloat(productoNuevo.precio)
-            };
-        } else {
-            // Payload para crear producto nuevo
-            productoCasteado = {
-                ...productoNuevo,
-                existencia: parseInt(productoNuevo.existencia),
-                precio: parseFloat(productoNuevo.precio),
-                urlFoto: "",
-                codigoInventario: branchId ? parseInt(branchId) : null,
-                codigoProducto: productoNuevo.codigoProducto ? parseInt(productoNuevo.codigoProducto) : null
-            };
-        }
 
-        console.log(productoCasteado)
-        try{
+        try {
             let productoCreado;
-            if(productoExistente) {
-                productoCreado = await agregarInventarioProducto(productoCasteado)
+
+            if (productoExistente) {
+                const payload = {
+                    codigoProducto: parseInt(productoNuevo.codigoProducto),
+                    codigoInventario: branchId ? parseInt(branchId) : null,
+                    existencia: parseInt(productoNuevo.existencia),
+                    precio: parseFloat(productoNuevo.precio)
+                };
+                productoCreado = await agregarInventarioProducto(payload);
             } else {
-                productoCreado = await createProduct(productoCasteado)
+                // Usar FormData para enviar datos + imagen juntos
+                const formData = new FormData();
+                formData.append('upc', productoNuevo.upc);
+                formData.append('nombreProducto', productoNuevo.nombreProducto);
+                formData.append('marca', productoNuevo.marca);
+                formData.append('existencia', parseInt(productoNuevo.existencia));
+                formData.append('precio', parseFloat(productoNuevo.precio));
+                formData.append('codigoInventario', branchId ? parseInt(branchId) : '');
+
+                if (imagenFile) {
+                    formData.append('file', imagenFile); // 'file' debe coincidir con FileInterceptor en NestJS
+                }
+
+                productoCreado = await createProduct(formData); // envías FormData en vez de objeto
             }
-            console.log("ProductoCreadoCorrectamente ", productoCreado)
-            navigate(`/ProductoDetalle?codigoProducto=${productoCreado.codigoProducto}&productoCreado=true`) 
-        }catch(err){
+
+            navigate(`/ProductoDetalle?codigoProducto=${productoCreado.codigoProducto}&productoCreado=true`);
+        } catch (err) {
             const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
-            setError(mensajeLimpio)
-            console.error("Ocurrio un error al crear su producto", err) 
+            setError(mensajeLimpio);
+            console.error("Ocurrio un error al crear su producto", err);
         }
- 
-    }
-
-
+    };
 
     return (
         <div style={{ padding: 20 }}>
@@ -176,21 +180,22 @@ const CrearProducto = () => {
 
             
             <div className="footer-div">
-                {/* <div>
-                    <p>Imagen</p>
-                    <div onClick={seleccionarImagen} style={{ width: 200, height: 150, border: "1px solid #ccc", borderRadius: 10 }}></div>
-                </div>
-                {productoNuevo.imagen ? (
-                    <img
-                        src={`file://${__dirname}/${productoNuevo.imagen}`}
-                        alt="Imagen del producto"
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
+                <div>
+                    <p>Imagen del producto</p>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onChangeImagen}
+                        style={{ marginBottom: 8 }}
                     />
-
-                ) : (
-                    <></>
-                )} */}
-                <div></div>
+                    {imagenPreview && (
+                        <img
+                            src={imagenPreview}
+                            alt="Preview"
+                            style={{ width: 200, height: 150, objectFit: 'cover', borderRadius: 10, border: '1px solid #ccc' }}
+                        />
+                    )}
+                </div>
 
                 <div className='button-success'>
                     <button className="btn btn-success " onClick={crear} >Crear</button>
