@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import "../styles/CrearProducto.css"
+import "../styles/ProductoDetalle.css"
 import { agregarInventarioProducto, callSelectImage, createProduct } from '../api/api';
 import { BranchContext } from '../context/BranchContext';
 import Alert from '@mui/material/Alert';
@@ -9,6 +10,7 @@ const CrearProducto = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const [error, setError] = useState("")
+    const [creando, setCreando] = useState(false)
 
     const codigo = location.state?.codigo
     const productoExistente = location.state?.productoExistente || false
@@ -78,6 +80,7 @@ const CrearProducto = () => {
         }
 
         const branchId = selectedBranch?.codigoInventario;
+        setCreando(true);
 
         try {
             let productoCreado;
@@ -112,6 +115,7 @@ const CrearProducto = () => {
             const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado';
             setError(mensajeLimpio);
             console.error("Ocurrio un error al crear su producto", err);
+            setCreando(false);
         }
     };
 
@@ -179,26 +183,35 @@ const CrearProducto = () => {
             </div>
 
             
-            <div className="footer-div">
-                <div>
-                    <p>Imagen del producto</p>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={onChangeImagen}
-                        style={{ marginBottom: 8 }}
+            <div className="producto-imagen-container">
+                <h4 className="producto-imagen-titulo">Imagen del Producto (opcional)</h4>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onChangeImagen}
+                    className="form-control mb-3"
+                />
+                {imagenPreview ? (
+                    <img
+                        src={imagenPreview}
+                        alt="Preview"
+                        className="producto-imagen"
                     />
-                    {imagenPreview && (
-                        <img
-                            src={imagenPreview}
-                            alt="Preview"
-                            style={{ width: 200, height: 150, objectFit: 'cover', borderRadius: 10, border: '1px solid #ccc' }}
-                        />
-                    )}
-                </div>
+                ) : (
+                    <p style={{ color: "#999", margin: 0 }}>Sin imagen — selecciona un archivo para agregar una.</p>
+                )}
+            </div>
 
+            <div className="footer-div">
                 <div className='button-success'>
-                    <button className="btn btn-success " onClick={crear} >Crear</button>
+                    <button className="btn btn-success" onClick={crear} disabled={creando}>
+                        {creando ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Creando...
+                            </>
+                        ) : "Crear"}
+                    </button>
                 </div>
             </div>
             

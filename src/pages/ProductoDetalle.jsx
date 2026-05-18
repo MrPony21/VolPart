@@ -24,6 +24,9 @@ const ProductoDetalle = () => {
     const [actualizadoAlert, setActualizadoAlert] = useState(false)
     const [error, setError] = useState("");
     const [cantidadStickers, setCantidadStickers] = useState(1);
+    const [imagenFile, setImagenFile] = useState(null);
+    const [imagenPreview, setImagenPreview] = useState(null);
+    const [guardando, setGuardando] = useState(false);
 
     const CAMPOS_PRODUCTO = ["nombreproducto", "marca", "upc", "urlfoto"];
     // Campos que pertenecen al inventario  
@@ -110,10 +113,12 @@ const ProductoDetalle = () => {
         const cambioProducto = CAMPOS_PRODUCTO.some(campo => datos[campo] !== oldDatos[campo]);
         const cambioInventario = CAMPOS_INVENTARIO.some(campo => datos[campo] !== oldDatos[campo]);
 
-        if (!cambioProducto && !cambioInventario) {
+        if (!cambioProducto && !cambioInventario && !imagenFile) {
             setModoEdicion(false);
-            return; 
+            return;
         }
+
+        setGuardando(true);
 
         // Construir payload según lo que cambió
         const payload = {};
@@ -132,15 +137,33 @@ const ProductoDetalle = () => {
         }
 
         try {
-            const actualizado = await updateProduct(datos.codigoproducto, payload);
+            let actualizado;
+
+            if (cambioProducto || cambioInventario) {
+                actualizado = await updateProduct(datos.codigoproducto, payload);
+            }
+
+            if (imagenFile) {
+                const formData = new FormData();
+                formData.append('file', imagenFile);
+                actualizado = await updateProduct(datos.codigoproducto, formData);
+            }
+
+            const urlfoto = actualizado?.urlfoto || (imagenFile ? imagenPreview : datos.urlfoto);
+            const datosFinales = { ...datos, ...actualizado, urlfoto };
+
             setModoEdicion(false);
-            setOldDatos(actualizado);
-            setDatos(actualizado);
+            setOldDatos(datosFinales);
+            setDatos(datosFinales);
+            setImagenFile(null);
+            setImagenPreview(null);
             setActualizadoAlert(true);
             setError("");
         } catch (err) {
             console.error("Error al actualizar", err);
             setError("Error al actualizar el producto.");
+        } finally {
+            setGuardando(false);
         }
     };
 
@@ -155,8 +178,15 @@ const ProductoDetalle = () => {
     };
 
     const handleCantidadStickersChange = (e) => {
-    const v = e.target.value;
-    if (/^\d*$/.test(v)) setCantidadStickers(v);
+        const v = e.target.value;
+        if (/^\d*$/.test(v)) setCantidadStickers(v);
+    };
+
+    const onChangeImagen = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImagenFile(file);
+        setImagenPreview(URL.createObjectURL(file));
     };
 
     return (
@@ -192,7 +222,7 @@ const ProductoDetalle = () => {
 
             {!loading && producto && datos && (
                 <>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div>
                 <div style={{ width: "100%" }}>
                     
                     {/* Información del Producto */}
@@ -283,19 +313,47 @@ const ProductoDetalle = () => {
                         />
                     </div>
                 </div>
-                {/* <div>
-                    <p>Imagen</p>
-                    <div style={{ width: 400, height: 250, border: "1px solid #ccc", borderRadius: 10 }}></div>
-                </div> */}
             </div>
+            {(datos.urlfoto || modoEdicion) && (
+                <div className="producto-imagen-container">
+                    <h4 className="producto-imagen-titulo">Imagen del Producto</h4>
+                    {modoEdicion && (
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={onChangeImagen}
+                            className="form-control mb-3"
+                        />
+                    )}
+                    {(imagenPreview || datos.urlfoto) ? (
+                        <img
+                            src={imagenPreview || datos.urlfoto}
+                            alt={datos.nombreproducto}
+                            className="producto-imagen"
+                        />
+                    ) : (
+                        modoEdicion && <p style={{ color: "#999", margin: 0 }}>Sin imagen — selecciona un archivo para agregar una.</p>
+                    )}
+                </div>
+            )}
+
             <div style={{ marginTop: 20 }}>
                 {modoEdicion ? (
                     <div className='tab-edicion'>
-                        <button className="btn btn-success" onClick={guardarCambios} >Guardar Cambios</button>
+                        <button className="btn btn-success" onClick={guardarCambios} disabled={guardando}>
+                            {guardando ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Guardando...
+                                </>
+                            ) : "Guardar Cambios"}
+                        </button>
                         <button className="btn btn-secondary" onClick={() => {
                             setModoEdicion(false)
                             setActualizadoAlert(false)
                             setDatos(oldDatos)
+                            setImagenFile(null)
+                            setImagenPreview(null)
                         }}
                         >No guardar</button>
                     </div>

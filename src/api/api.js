@@ -104,10 +104,11 @@ export async function agregarInventarioProducto(producto){
 
 export async function updateProduct(codigoProducto, payload){
     try {
+        const isFormData = payload instanceof FormData;
         const response = await fetch(`${API_BASE_URL}/product/${codigoProducto}`, {
             method: "PUT",
-            headers: getAuthHeaders(),
-            body: JSON.stringify(payload),
+            headers: getAuthHeaders(isFormData),
+            body: isFormData ? payload : JSON.stringify(payload),
         });
         return handleResponse(response);
     } catch(err){
