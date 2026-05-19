@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { getProducts, getClientes, createSale } from '../api/api';
+import React, { useState, useEffect, useContext } from 'react';
+import { getProductsByInventory, getClientes, createSale } from '../api/api';
 import ScannerInput from '../tools/ScannerInput';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import EditIcon from '@mui/icons-material/Edit';
+import ImageIcon from '@mui/icons-material/Image';
+import { BranchContext } from '../context/BranchContext';
 
 import "../styles/Ventas.css";
 
@@ -17,18 +19,21 @@ const Ventas = () => {
   const [productoEdit, setProductoEdit] = useState(null);
   const [cantidadEdit, setCantidadEdit] = useState(1);
   const [modalAlert, setModalAlert] = useState("");
+  const [fotoModal, setFotoModal] = useState({ open: false, url: "", nombre: "" });
   const [clientes, setClientes] = useState([]);
   const [clienteEncontrado, setClienteEncontrado] = useState(false);
-
+  const [manualCodigo, setManualCodigo] = useState("");
+  const { selectedBranch } = useContext(BranchContext);
+  
 
   useEffect(() => {
-    getProducts()
+    getProductsByInventory(selectedBranch?.codigoInventario)
       .then(data => setProducts(data))
       .catch(err => console.error(err));
     getClientes()
       .then(data => setClientes(data))
       .catch(err => console.error(err));
-  }, []);
+  }, [selectedBranch?.codigoInventario]);
 
   const handleClienteChange = (e) => {
     const { name, value } = e.target;
@@ -64,30 +69,37 @@ const Ventas = () => {
   };
 
 
-  const handleEliminarProducto = (codigo) => {
-    setVentasList(prev => prev.filter(item => item.codigo !== codigo));
+  const handleManualVerificar = () => {
+    const codigo = manualCodigo.trim();
+    if (!codigo) return;
+    handleScan(codigo);
+    setManualCodigo("");
+  };
+
+  const handleEliminarProducto = (codigoproducto) => {
+    setVentasList(prev => prev.filter(item => item.codigoproducto !== codigoproducto));
   };
 
   const handleScan = (codigo) => {
     const codigoLimpio = codigo.trim();
-    const producto = products.find(p => p.codigo === codigoLimpio);
+    const producto = products.find(p => p.upc === codigoLimpio);
     if (producto) {
       setVentasList(prev => {
-        const idx = prev.findIndex(item => item.codigo === producto.codigo);
+        const idx = prev.findIndex(item => item.codigoproducto === producto.codigoproducto);
         if (idx !== -1) {
-          if (prev[idx].cantidadVenta < producto.cantidad) {
+          if (prev[idx].cantidadVenta < producto.existencia) {
             const updated = [...prev];
             updated[idx] = { ...updated[idx], cantidadVenta: updated[idx].cantidadVenta + 1 };
             return updated;
           } else {
-            setAlertMsg(`No hay suficiente stock para el producto ${producto.nombre}`);
+            setAlertMsg(`No hay suficiente stock para ${producto.nombreproducto}`);
             return prev;
           }
         }
-        if (producto.cantidad > 0) {
+        if (producto.existencia > 0) {
           return [...prev, { ...producto, cantidadVenta: 1 }];
         } else {
-          setAlertMsg(`No hay stock disponible para el producto ${producto.nombre}`);
+          setAlertMsg(`No hay stock disponible para ${producto.nombreproducto}`);
           return prev;
         }
       });
@@ -113,7 +125,7 @@ const handleVenta = async () => {
   try {
     const { nuevaVenta, invoicePath } = await createSale(ventaPayload);
     // Refrescar inventario en frontend
-    const productosActualizados = await getProducts();
+    const productosActualizados = await getProductsByInventory(selectedBranch?.codigoInventario);
     setProducts(productosActualizados);
 
     setAlertMsg(`Venta #${nuevaVenta.id} registrada.`);
@@ -129,7 +141,7 @@ const handleVenta = async () => {
 };
 
 
-  const totalVenta = ventasList.reduce((acc, el) => acc + (el.precio * el.cantidadVenta), 0);
+  const totalVenta = ventasList.reduce((acc, el) => acc + (parseFloat(el.precio) * el.cantidadVenta), 0);
 
   const handleOpenCantidadModal = (producto) => {
     setProductoEdit(producto);
@@ -140,7 +152,7 @@ const handleVenta = async () => {
   const handleSaveCantidad = () => {
     if (productoEdit) {
       setVentasList(prev => prev.map(item =>
-        item.codigo === productoEdit.codigo
+        item.codigoproducto === productoEdit.codigoproducto
           ? { ...item, cantidadVenta: cantidadEdit }
           : item
       ));
@@ -152,7 +164,7 @@ const handleVenta = async () => {
   const onChangeCantidad = (e) => {
     const value = e.target.value;
     setCantidadEdit(value);
-    if (value > productoEdit.cantidad) {
+    if (value > productoEdit.existencia) {
       setModalAlert("La cantidad seleccionada supera a la cantidad disponible");
     } else if (value <= 0) {
       setModalAlert("Selecciona una cantidad válida");
@@ -232,7 +244,23 @@ const handleVenta = async () => {
 
       {/* Scanner y alert */}
       <div className="ventas-scanner-card">
+        <label className="ventas-label-bold" style={{ marginBottom: 8, display: "block" }}>
+          Escanea el producto o ingrésalo manualmente
+        </label>
         <ScannerInput onScan={handleScan} />
+        <div className="ventas-manual-row">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Ingresar código manualmente"
+            value={manualCodigo}
+            onChange={e => setManualCodigo(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleManualVerificar()}
+          />
+          <button className="btn btn-primary" onClick={handleManualVerificar}>
+            Verificar
+          </button>
+        </div>
         {alertMsg && (
           <div className="alert alert-info ventas-alert">
             {alertMsg}
@@ -245,20 +273,23 @@ const handleVenta = async () => {
           <tr>
             <th>#</th>
             <th>Código</th>
+            <th>UPC</th>
             <th>Nombre</th>
             <th>Marca</th>
             <th>Cantidad</th>
             <th>Precio</th>
+            <th>Foto</th>
             <th>Total</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {ventasList.map((el, idx) => (
-            <tr key={`${el.codigo}+${idx}`}>
+            <tr key={`${el.codigoproducto}+${idx}`}>
               <td>{idx + 1}</td>
-              <td>{el.codigo}</td>
-              <td>{el.nombre}</td>
+              <td>{el.codigoproducto}</td>
+              <td>{el.upc}</td>
+              <td>{el.nombreproducto}</td>
               <td>{el.marca}</td>
               <td>
                 <div className="ventas-cantidad-cell">
@@ -274,13 +305,25 @@ const handleVenta = async () => {
                 </div>
               </td>
               <td>Q{el.precio}</td>
-              <td><b>Q{(el.precio * el.cantidadVenta).toFixed(2)}</b></td>
+              <td className="ventas-foto-cell">
+                {el.urlfoto && (
+                  <button
+                    className="btn btn-outline-info btn-sm"
+                    title="Ver foto"
+                    onClick={() => setFotoModal({ open: true, url: el.urlfoto, nombre: el.nombreproducto })}
+                  >
+                    <ImageIcon fontSize="small" />
+                  </button>
+                )}
+              </td>
+              <td><b>Q{(parseFloat(el.precio) * el.cantidadVenta).toFixed(2)}</b></td>
               <td className="ventas-delete-cell">
                 <button
                   className="btn btn-danger btn-sm"
-                  onClick={() => handleEliminarProducto(el.codigo)}
+                  title="Eliminar"
+                  onClick={() => handleEliminarProducto(el.codigoproducto)}
                 >
-                  <DeleteIcon />
+                  <DeleteIcon fontSize="small" />
                 </button>
               </td>
             </tr>
@@ -299,20 +342,20 @@ const handleVenta = async () => {
           {productoEdit && (
             <>
               <div className="ventas-modal-info">
-                <b>{productoEdit.nombre}</b><br />
+                <b>{productoEdit.nombreproducto}</b><br />
                 <span className="ventas-info-blue">
-                  Disponible: {productoEdit.cantidad}
+                  Disponible: {productoEdit.existencia}
                 </span>
               </div>
               <input
                 type="number"
-                max={productoEdit.cantidad}
+                max={productoEdit.existencia}
                 value={cantidadEdit}
                 onChange={onChangeCantidad}
                 onBlur={e => {
                   const val = Number(e.target.value);
                   setCantidadEdit(
-                    Math.max(1, Math.min(productoEdit.cantidad, isNaN(val) ? 1 : val))
+                    Math.max(1, Math.min(productoEdit.existencia, isNaN(val) ? 1 : val))
                   );
                 }}
                 className="form-control ventas-modal-input"
@@ -337,6 +380,25 @@ const handleVenta = async () => {
               </div>
             </>
           )}
+        </Box>
+      </Modal>
+
+      <Modal
+        open={fotoModal.open}
+        onClose={() => setFotoModal({ open: false, url: "", nombre: "" })}
+      >
+        <Box className="ventas-modal-box-foto">
+          <h4 style={{ marginBottom: 16 }}>{fotoModal.nombre}</h4>
+          <img
+            src={fotoModal.url}
+            alt={fotoModal.nombre}
+            style={{ width: "100%", maxHeight: 400, objectFit: "contain", borderRadius: 8 }}
+          />
+          <div style={{ textAlign: "right", marginTop: 16 }}>
+            <button className="btn btn-secondary" onClick={() => setFotoModal({ open: false, url: "", nombre: "" })}>
+              Cerrar
+            </button>
+          </div>
         </Box>
       </Modal>
 
