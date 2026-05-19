@@ -14,7 +14,7 @@ const Ventas = () => {
   const [products, setProducts] = useState([]);
   const [ventasList, setVentasList] = useState([]);
   const [alertMsg, setAlertMsg] = useState("");
-  const [cliente, setCliente] = useState({ nit: '', nombre: '', telefono: '', direccion: '' });
+  const [cliente, setCliente] = useState({ codigoCliente: 0, nit: '', nombre: '', telefono: '', direccion: '' });
   const [modalCantidadOpen, setModalCantidadOpen] = useState(false);
   const [productoEdit, setProductoEdit] = useState(null);
   const [cantidadEdit, setCantidadEdit] = useState(1);
@@ -45,6 +45,7 @@ const Ventas = () => {
 
       if (encontrado) {
         setCliente({
+          codigoCliente: encontrado.codigoCliente ?? 0,
           nit: encontrado.nit,
           nombre: encontrado.nombreCliente,
           telefono: encontrado.telefono,
@@ -55,6 +56,7 @@ const Ventas = () => {
       else {
         setCliente(prev => ({
           ...prev,
+          codigoCliente: 0,
           nit: nitIngresado,
           nombre: '',
           telefono: '',
@@ -116,24 +118,20 @@ const handleVenta = async () => {
   }
 
   const ventaPayload = {
-    client: cliente,
-    items: ventasList,
-    total: totalVenta,
-    date: new Date().toISOString()
+    codigoCliente: cliente.codigoCliente,
+    codigoInventario: selectedBranch?.codigoInventario,
+    items: ventasList.map(el => ({
+      codigoProducto: el.codigoproducto,
+      cantidad: el.cantidadVenta,
+    })),
   };
 
   try {
-    const { nuevaVenta, invoicePath } = await createSale(ventaPayload);
-    // Refrescar inventario en frontend
+    await createSale(ventaPayload, selectedBranch?.codigoInventario);
     const productosActualizados = await getProductsByInventory(selectedBranch?.codigoInventario);
     setProducts(productosActualizados);
-
-    setAlertMsg(`Venta #${nuevaVenta.id} registrada.`);
     setVentasList([]);
-
-    if (invoicePath) {
-      setAlertMsg(prev => prev + ` Factura guardada en: ${invoicePath}`);
-    }
+    setAlertMsg(`Venta registrada correctamente.`);
   } catch (err) {
     console.error(err);
     setAlertMsg("Error al procesar la venta.");

@@ -182,8 +182,8 @@ export async function deleteCliente(nit) {
 }
 
 // Funciones de Ventas
-export async function createSale(venta) {
-  const response = await fetch(`${API_BASE_URL}/ventas`, {
+export async function createSale(venta, codigoInventario) {
+  const response = await fetch(`${API_BASE_URL}/venta?codigoInventario=${codigoInventario}`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(venta),
