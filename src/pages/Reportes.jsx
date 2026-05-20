@@ -1,108 +1,108 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import "../styles/Reportes.css"
-import { exportarInventarioJSON, exportarExcel, exportarVentasJSON, exportarClientesJSON } from '../api/api';
+import React, { useState, useContext } from 'react';
+import "../styles/Reportes.css";
+import { getProductsByInventory, getClientes, getSales } from '../api/api';
+import { exportarInventarioExcel, exportarClientesExcel, exportarVentasExcel, downloadJson } from '../tools/exportExcel';
+import { BranchContext } from '../context/BranchContext';
 import Alert from '@mui/material/Alert';
 
-
 const Reportes = () => {
-    const [alertExcel, setAlertExcel] = useState("")
-    const [alertErrorExcel, setAlertErrorExcel] = useState("")
-    const [alertJson, setAlertJson] = useState("")
-    const [alertErrorJson, setErrorJson] = useState("")
+  const { selectedBranch } = useContext(BranchContext);
+  const [loading, setLoading] = useState("");
+  const [alertMsg, setAlertMsg] = useState({ type: "", text: "" });
 
-    const [alertVentas, setAlertVentas] = useState("");
-    const [alertErrorVentas, setErrorVentas] = useState("");
-    const [alertClientes, setAlertClientes] = useState("");
-    const [alertErrorClientes, setErrorClientes] = useState("");
+  const notify = (type, text) => {
+    setAlertMsg({ type, text });
+    setTimeout(() => setAlertMsg({ type: "", text: "" }), 4000);
+  };
 
-
-
-    const exportarInventarioFormatoCSV = async () => {
-        const response = await exportarExcel()
-        if (response.success) {
-            setAlertExcel(`Excel exportado correctamente a:\n${response.ruta}`);
-        } else {
-            setAlertErrorExcel(response.mensaje);
-        }
+  const withLoading = async (key, fn) => {
+    setLoading(key);
+    try {
+      await fn();
+      notify("success", "Exportación completada correctamente.");
+    } catch (err) {
+      console.error(err);
+      notify("error", "Error al exportar: " + (err.message || "Error desconocido"));
+    } finally {
+      setLoading("");
     }
+  };
 
-    const exportarInventarioFormatoJSON = async () => {
-        const response = await exportarInventarioJSON()
-        if (response.success) {
-            setAlertJson("Productos exportados correctamente")
-        } else {
-            setErrorJson("No se ha podido exportar los productos")
-        }
-    }
+  const sucursal = selectedBranch?.nombreInventario;
 
-    const exportarVentasFormatoJSON = async () => {
-        const res = await exportarVentasJSON();
-        if (res.success) setAlertVentas(`Ventas exportadas en: ${res.ruta}`);
-        else setErrorVentas(res.mensaje);
-    };
+  const handleExcelInventario = () =>
+    withLoading("excel-inv", async () => {
+      const data = await getProductsByInventory(selectedBranch?.codigoInventario);
+      await exportarInventarioExcel(data, sucursal);
+    });
 
-    const exportarClientesFormatoJSON = async () => {
-        const res = await exportarClientesJSON();
-        if (res.success) setAlertClientes(`Clientes exportados en: ${res.ruta}`);
-        else setErrorClientes(res.mensaje);
-    };
+  const handleExcelClientes = () =>
+    withLoading("excel-cli", async () => {
+      const data = await getClientes();
+      await exportarClientesExcel(data);
+    });
 
+  const handleExcelVentas = () =>
+    withLoading("excel-ven", async () => {
+      const data = await getSales(selectedBranch?.codigoInventario);
+      await exportarVentasExcel(data, sucursal);
+    });
 
+  const handleJsonInventario = () =>
+    withLoading("json-inv", async () => {
+      const data = await getProductsByInventory(selectedBranch?.codigoInventario);
+      downloadJson(data, 'Inventario', sucursal);
+    });
 
-    return (
-        <div style={{ padding: 20 }}>
-            <h1 style={{ margin: "20px" }}>Reportes</h1>
+  const handleJsonClientes = () =>
+    withLoading("json-cli", async () => {
+      const data = await getClientes();
+      downloadJson(data, 'clientes');
+    });
 
-            <div className='panel-buttoms'>
-                <h3>EXCEL</h3>
-                {alertExcel && (
-                    <Alert variant="filled" severity="success">
-                        {alertExcel}
-                    </Alert>
-                )}
-                {alertErrorExcel && (
-                    <Alert variant="filled" severity="error">
-                        {alertErrorExcel}
-                    </Alert>
-                )}
+  const handleJsonVentas = () =>
+    withLoading("json-ven", async () => {
+      const data = await getSales(selectedBranch?.codigoInventario);
+      downloadJson(data, 'ventas', sucursal);
+    });
 
+  const btn = (key, label, onClick, color = "btn-primary") => (
+    <button
+      type="button"
+      className={`btn ${color} buttom-reporte`}
+      style={{ height: "100%" }}
+      onClick={onClick}
+      disabled={!!loading}
+    >
+      {loading === key ? "Exportando..." : label}
+    </button>
+  );
 
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick={exportarInventarioFormatoCSV} >Exportar Inventario Excel</button>
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick="" >Exportar Ventas</button>
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick="" >Exportar Clientes</button>
-            </div>
+  return (
+    <div style={{ padding: 20 }}>
+      <h1 style={{ margin: "20px" }}>Reportes</h1>
 
+      {alertMsg.text && (
+        <Alert variant="filled" severity={alertMsg.type} style={{ marginBottom: 16 }}>
+          {alertMsg.text}
+        </Alert>
+      )}
 
-            <div className='panel-buttoms' style={{ marginTop: "40px" }}>
-                <h3>JSON</h3>
-                {alertJson && (
-                    <Alert variant="filled" severity="success">
-                        {alertJson}
-                    </Alert>
-                )}
-                {alertErrorJson && (
-                    <Alert variant="filled" severity="error">
-                        {alertErrorJson}
-                    </Alert>
-                )}
+      <div className='panel-buttoms'>
+        <h3>Excel</h3>
+        {btn("excel-inv", "Exportar Inventario Excel", handleExcelInventario, "btn-success")}
+        {btn("excel-ven", "Exportar Ventas Excel",     handleExcelVentas,     "btn-success")}
+        {btn("excel-cli", "Exportar Clientes Excel",   handleExcelClientes,   "btn-success")}
+      </div>
 
-                {alertVentas && <Alert severity="success">{alertVentas}</Alert>}
-                {alertErrorVentas && <Alert severity="error">{alertErrorVentas}</Alert>}
-
-                {alertClientes && <Alert severity="success">{alertClientes}</Alert>}
-                {alertErrorClientes && <Alert severity="error">{alertErrorClientes}</Alert>}
-
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick={exportarInventarioFormatoJSON} >Exportar Inventario JSON</button>
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }} onClick={exportarVentasFormatoJSON} >Exportar Ventas</button>
-                <button type="button" class="btn btn-primary buttom-reporte" style={{ height: "100%" }}  onClick={exportarClientesFormatoJSON} >Exportar Clientes</button>
-            </div>
-
-        </div>
-    )
-
-
-}
-
+      <div className='panel-buttoms' style={{ marginTop: "40px" }}>
+        <h3>JSON</h3>
+        {btn("json-inv", "Exportar Inventario JSON", handleJsonInventario)}
+        {btn("json-ven", "Exportar Ventas JSON",     handleJsonVentas)}
+        {btn("json-cli", "Exportar Clientes JSON",   handleJsonClientes)}
+      </div>
+    </div>
+  );
+};
 
 export default Reportes;

@@ -1,4 +1,3 @@
-import { getFormControlUtilityClasses } from "@mui/material";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -122,16 +121,6 @@ export async function callSelectImage(){
     return ruta;
 }
 
-export async function exportarInventarioJSON(){
-    const ruta = await window.api.exportarInventarioEnJson();
-    return ruta;
-}
-
-export const exportarExcel = async () => {
-    const response = await window.api.exportarInventarioEnExcel();
-    return response;
-};
-
 export async function importProduct(productos, codigoInventario){
     const response = await fetch(`${API_BASE_URL}/product/import?codigoInventario=${codigoInventario}`, {
         method: "POST",
@@ -197,17 +186,6 @@ export async function getSales(codigoInventario) {
       headers: getAuthHeaders(),
   });
   return handleResponse(response);
-}
-
-export async function exportarVentasJSON() {
-  const response = await window.api.exportarVentasJson();
-  return response;
-}
-
-/** Exporta clientes en JSON */
-export async function exportarClientesJSON() {
-  const response = await window.api.exportarClientesJson();
-  return response;
 }
 
 /** Importa un array de ventas (incluso vacío) */
