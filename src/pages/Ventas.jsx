@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { getProductsByInventory, getClientes, createSale } from '../api/api';
+import { generarFacturaPDF } from '../tools/generarFactura';
 import ScannerInput from '../tools/ScannerInput';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Modal from '@mui/material/Modal';
@@ -117,21 +118,42 @@ const handleVenta = async () => {
     return;
   }
 
+  // Capturamos snapshot antes de limpiar el estado
+  const itemsSnapshot  = [...ventasList];
+  const clienteSnapshot = { ...cliente };
+  const totalSnapshot   = itemsSnapshot.reduce(
+    (acc, el) => acc + parseFloat(el.precio) * el.cantidadVenta, 0
+  );
+
   const ventaPayload = {
-    codigoCliente: cliente.codigoCliente,
+    codigoCliente: clienteSnapshot.codigoCliente,
     codigoInventario: selectedBranch?.codigoInventario,
-    items: ventasList.map(el => ({
+    items: itemsSnapshot.map(el => ({
       codigoProducto: el.codigoproducto,
       cantidad: el.cantidadVenta,
     })),
   };
 
   try {
-    await createSale(ventaPayload, selectedBranch?.codigoInventario);
+    const ventaCreada = await createSale(ventaPayload, selectedBranch?.codigoInventario);
     const productosActualizados = await getProductsByInventory(selectedBranch?.codigoInventario);
     setProducts(productosActualizados);
     setVentasList([]);
-    setAlertMsg(`Venta registrada correctamente.`);
+    setCliente({ codigoCliente: 0, nit: '', nombre: '', telefono: '', direccion: '' });
+    setClienteEncontrado(false);
+    setAlertMsg('Venta registrada correctamente. Generando factura...');
+
+    // Generar factura PDF con los datos locales + número de serie del API
+    generarFacturaPDF({
+      numeroSerie: ventaCreada?.numeroSerie,
+      codigoVenta: ventaCreada?.codigoVenta,
+      cliente: clienteSnapshot,
+      items: itemsSnapshot,
+      total: totalSnapshot,
+      nombreSucursal: selectedBranch?.nombreInventario,
+    });
+
+    setAlertMsg('Venta registrada. Factura descargada.');
   } catch (err) {
     console.error(err);
     setAlertMsg("Error al procesar la venta.");
