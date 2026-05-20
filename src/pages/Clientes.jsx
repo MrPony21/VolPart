@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createCliente, updateCliente, deleteCliente, getClientes } from '../api/api';
+import { exportarClientesExcel } from '../tools/exportExcel';
 import Alert from '@mui/material/Alert';
 import '../styles/inventory.css';
 
@@ -104,7 +105,12 @@ const Clientes = () => {
                     </select>
                     <button type="button" className="btn btn-secondary button-head" onClick={() => { setInputValue(""); setFilterField("nit"); }} >Limpiar</button>
                 </div>
-                <button type="button" className="btn btn-primary" style={{ height: "100%" }} onClick={() => handleOpenModal()} >Crear Cliente</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" className="btn btn-success" style={{ height: "100%" }}
+                    onClick={() => exportarClientesExcel(clientes)}
+                  >Exportar Excel</button>
+                  <button type="button" className="btn btn-primary" style={{ height: "100%" }} onClick={() => handleOpenModal()} >Crear Cliente</button>
+                </div>
             </div>
             <div className="table-responsive">
                 <table className="table table-hover">

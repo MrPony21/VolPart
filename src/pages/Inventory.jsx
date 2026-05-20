@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProducts, getProductsByInventory, getProductIndividual } from '../api/api';
+import { exportarInventarioExcel } from '../tools/exportExcel';
 import { BranchContext } from '../context/BranchContext';
 import Pagination from '../components/Pagination';
 import ScannerInput from '../tools/ScannerInput';
@@ -144,7 +145,12 @@ const Inventory = () => {
           onClick={() => limpiarFiltros()} >Limpiar</button>
 
         </div>
-        <button type="button" class="btn btn-primary" style={{ height: "100%" }} onClick={() => navigate("/CrearProducto")} >Crear Producto</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" className="btn btn-success" style={{ height: "100%" }}
+            onClick={() => exportarInventarioExcel(products)}
+          >Exportar Excel</button>
+          <button type="button" className="btn btn-primary" style={{ height: "100%" }} onClick={() => navigate("/CrearProducto")} >Crear Producto</button>
+        </div>
 
 
       </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { getSales } from '../api/api';
+import { exportarVentasExcel } from '../tools/exportExcel';
 import "../styles/Sales.css";
 import { BranchContext } from '../context/BranchContext';
 import Modal from '@mui/material/Modal';
@@ -49,7 +50,7 @@ const Sales = () => {
         <h1 className="sales-title">Historial de Ventas</h1>
       </div>
 
-      <div className="sales-filter-row">
+      <div className="sales-filter-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div className="sales-filter-input-group">
           <label>Buscar por número de serie, código, cliente o NIT:</label>
           <input
@@ -60,6 +61,13 @@ const Sales = () => {
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
+        <button
+          className="btn btn-success"
+          style={{ marginLeft: 16, whiteSpace: "nowrap" }}
+          onClick={() => exportarVentasExcel(ventas)}
+        >
+          Exportar Excel
+        </button>
       </div>
 
       {currentVentas.length === 0 ? (
