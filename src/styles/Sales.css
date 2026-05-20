@@ -208,3 +208,14 @@
 .sales-page-info {
   font-weight: 500;
 }
+
+.sales-section {
+  margin-bottom: 14px;
+}
+
+.sales-section-title {
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 8px;
+  font-size: 15px;
+}

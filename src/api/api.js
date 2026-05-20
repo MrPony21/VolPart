@@ -191,8 +191,8 @@ export async function createSale(venta, codigoInventario) {
   return handleResponse(response);
 }
 
-export async function getSales() {
-  const response = await fetch(`${API_BASE_URL}/ventas`, {
+export async function getSales(codigoInventario) {
+  const response = await fetch(`${API_BASE_URL}/venta?codigoInventario=${codigoInventario}`, {
       method: "GET",
       headers: getAuthHeaders(),
   });

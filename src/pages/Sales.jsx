@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getSales } from '../api/api';
-import "../styles/sales.css";
+import "../styles/Sales.css";
+import { BranchContext } from '../context/BranchContext';
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
+import ImageIcon from '@mui/icons-material/Image';
 
 const PAGE_SIZE = 10;
 
@@ -8,49 +12,36 @@ const Sales = () => {
   const [ventas, setVentas] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [fotoModal, setFotoModal] = useState({ open: false, url: "", nombre: "" });
+  const { selectedBranch } = useContext(BranchContext);
 
-  // Carga inicial y orden descendente
   useEffect(() => {
-    getSales()
-      .then(data => {
-        const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setVentas(sorted);
-      })
-      .catch(err => console.error(err));
-  }, []);
+    if (selectedBranch?.codigoInventario) {
+      getSales(selectedBranch.codigoInventario)
+        .then(data => setVentas(data))
+        .catch(err => console.error(err));
+    }
+  }, [selectedBranch?.codigoInventario]);
 
-  // Aplicar filtros cada vez que cambian ventas, searchTerm o fechas
   useEffect(() => {
     let result = ventas;
-    if (fromDate) {
-      const from = new Date(fromDate);
-      result = result.filter(v => new Date(v.date) >= from);
-    }
-    if (toDate) {
-      const to = new Date(toDate);
-      result = result.filter(v => new Date(v.date) <= to);
-    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(v =>
-        v.client.nit.toLowerCase().includes(term) ||
-        v.client.nombre.toLowerCase().includes(term)
+        v.numeroSerie.toLowerCase().includes(term) ||
+        String(v.codigoVenta).includes(term) ||
+        (v.cliente?.nombreCliente?.toLowerCase().includes(term)) ||
+        (v.cliente?.nit?.toLowerCase().includes(term))
       );
     }
     setCurrentPage(1);
     setFiltered(result);
-  }, [ventas, searchTerm, fromDate, toDate]);
+  }, [ventas, searchTerm]);
 
-  // Paginación
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE) || 1;
   const start = (currentPage - 1) * PAGE_SIZE;
   const currentVentas = filtered.slice(start, start + PAGE_SIZE);
-
-  const handlePrev = () => setCurrentPage(p => Math.max(p - 1, 1));
-  const handleNext = () => setCurrentPage(p => Math.min(p + 1, pageCount));
 
   return (
     <div className="sales-container">
@@ -58,89 +49,112 @@ const Sales = () => {
         <h1 className="sales-title">Historial de Ventas</h1>
       </div>
 
-      {/* Filtros */}
       <div className="sales-filter-row">
         <div className="sales-filter-input-group">
-          <label>Desde:</label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={e => setFromDate(e.target.value)}
-          />
-        </div>
-        <div className="sales-filter-input-group">
-          <label>Hasta:</label>
-          <input
-            type="date"
-            value={toDate}
-            onChange={e => setToDate(e.target.value)}
-          />
-        </div>
-        <div className="sales-filter-input-group">
-          <label>Buscar cliente:</label>
+          <label>Buscar por número de serie, código, cliente o NIT:</label>
           <input
             type="text"
-            placeholder="NIT o nombre"
+            className="form-control"
+            placeholder="Ej: AP-10, Marco, 123456789"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Lista de ventas paginada */}
       {currentVentas.length === 0 ? (
-        <p>No hay ventas para estos filtros.</p>
+        <p>No hay ventas para mostrar.</p>
       ) : (
         currentVentas.map(venta => (
-          <div className="sales-client-card" key={venta.id}>
-            <h3 className="sales-client-title">Venta #{venta.id}</h3>
+          <div className="sales-client-card" key={venta.codigoVenta}>
 
+            {/* Encabezado de la venta */}
             <div className="sales-client-row">
               <div className="sales-client-input-group">
-                <strong>Fecha:</strong> {new Date(venta.date).toLocaleString()}
+                <h3 className="sales-client-title">{venta.numeroSerie}</h3>
               </div>
-              <div className="sales-client-input-group">
-                <strong>Total:</strong> Q{venta.total.toFixed(2)}
+              <div className="sales-client-input-group" style={{ textAlign: "right" }}>
+                <span style={{ fontSize: 13, color: "#888" }}>
+                  Código venta: {venta.codigoVenta}
+                </span>
               </div>
             </div>
 
-            <div className="sales-client-row">
-              <div className="sales-client-input-group">
-                <strong>Cliente:</strong> {venta.client.nombre} ({venta.client.nit})
+            {/* Datos del cliente */}
+            {venta.cliente ? (
+              <div className="sales-section">
+                <div className="sales-section-title">Datos del Cliente</div>
+                <div className="sales-client-row">
+                  <div className="sales-client-input-group">
+                    <strong>Nombre:</strong> {venta.cliente.nombreCliente}
+                  </div>
+                  <div className="sales-client-input-group">
+                    <strong>NIT:</strong> {venta.cliente.nit}
+                  </div>
+                </div>
+                <div className="sales-client-row">
+                  <div className="sales-client-input-group">
+                    <strong>Teléfono:</strong> {venta.cliente.telefono}
+                  </div>
+                  <div className="sales-client-input-group">
+                    <strong>Dirección:</strong> {venta.cliente.direccion}
+                  </div>
+                </div>
               </div>
-              <div className="sales-client-input-group">
-                <strong>Teléfono:</strong> {venta.client.telefono}
+            ) : (
+              <div className="sales-client-row">
+                <div className="sales-client-input-group" style={{ color: "#888" }}>
+                  Sin cliente registrado
+                </div>
               </div>
-            </div>
+            )}
 
+            {/* Tabla de productos */}
             <div className="sales-products-title">Productos</div>
-            <table className="sales-table">
+            <table className="table table-striped table-bordered sales-table">
               <thead>
                 <tr>
                   <th>#</th>
                   <th>Código</th>
                   <th>Nombre</th>
-                  <th>Cant.</th>
-                  <th>Precio</th>
+                  <th>UPC</th>
+                  <th>Cantidad</th>
+                  <th>Precio Unit.</th>
+                  <th>Foto</th>
                   <th>Subtotal</th>
                 </tr>
               </thead>
               <tbody>
-                {venta.items.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
-                    <td>{item.codigo}</td>
-                    <td>{item.nombre}</td>
-                    <td>{item.cantidadVenta}</td>
-                    <td>Q{item.precio.toFixed(2)}</td>
-                    <td>Q{(item.precio * item.cantidadVenta).toFixed(2)}</td>
-                  </tr>
-                ))}
+                {venta.items.map((item, idx) => {
+                  const producto = item.inventarioProducto?.producto;
+                  return (
+                    <tr key={item.codigoItemVenta}>
+                      <td>{idx + 1}</td>
+                      <td>{producto?.codigoProducto ?? item.codigoInventarioProducto}</td>
+                      <td>{producto?.nombreProducto ?? "-"}</td>
+                      <td>{producto?.upc ?? "-"}</td>
+                      <td>{item.cantidad}</td>
+                      <td>Q{parseFloat(item.precioVenta).toFixed(2)}</td>
+                      <td className="ventas-foto-cell">
+                        {producto?.urlFoto ? (
+                          <button
+                            className="btn btn-outline-info btn-sm"
+                            title="Ver foto"
+                            onClick={() => setFotoModal({ open: true, url: producto.urlFoto, nombre: producto.nombreProducto })}
+                          >
+                            <ImageIcon fontSize="small" />
+                          </button>
+                        ) : null}
+                      </td>
+                      <td><b>Q{parseFloat(item.totalItemVenta).toFixed(2)}</b></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
             <div className="sales-total">
-              TOTAL: Q{venta.total.toFixed(2)}
+              TOTAL: Q{parseFloat(venta.total).toFixed(2)}
             </div>
           </div>
         ))
@@ -150,7 +164,7 @@ const Sales = () => {
       <div className="sales-pagination">
         <button
           className={`sales-pagination-button ${currentPage === 1 ? 'disabled' : ''}`}
-          onClick={handlePrev}
+          onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
         >
           Anterior
@@ -160,12 +174,32 @@ const Sales = () => {
         </span>
         <button
           className={`sales-pagination-button ${currentPage === pageCount ? 'disabled' : ''}`}
-          onClick={handleNext}
+          onClick={() => setCurrentPage(p => Math.min(p + 1, pageCount))}
           disabled={currentPage === pageCount}
         >
           Siguiente
         </button>
       </div>
+
+      {/* Modal de foto */}
+      <Modal
+        open={fotoModal.open}
+        onClose={() => setFotoModal({ open: false, url: "", nombre: "" })}
+      >
+        <Box className="ventas-modal-box-foto">
+          <h4 style={{ marginBottom: 16 }}>{fotoModal.nombre}</h4>
+          <img
+            src={fotoModal.url}
+            alt={fotoModal.nombre}
+            style={{ width: "100%", maxHeight: 400, objectFit: "contain", borderRadius: 8 }}
+          />
+          <div style={{ textAlign: "right", marginTop: 16 }}>
+            <button className="btn btn-secondary" onClick={() => setFotoModal({ open: false, url: "", nombre: "" })}>
+              Cerrar
+            </button>
+          </div>
+        </Box>
+      </Modal>
     </div>
   );
 };
