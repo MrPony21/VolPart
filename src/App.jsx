@@ -8,6 +8,7 @@ import { Light, Dark } from "./styles/Themes";
 import { ThemeProvider } from "styled-components";
 import { BranchProvider } from './context/BranchContext'
 import Inventory from "./pages/Inventory";
+import { AuthProvider } from './context/AuthContext';
 export const ThemeContext = React.createContext(null);
 
 function AppContent() {
@@ -72,11 +73,13 @@ function App() {
     <>
       <ThemeContext.Provider value={{ setTheme, theme }}>
         <ThemeProvider theme={themeStyle}>
-          <BranchProvider>
-            <HashRouter>
-              <AppContent />
-            </HashRouter>
-          </BranchProvider>
+          <AuthProvider>
+            <BranchProvider>
+              <HashRouter>
+                <AppContent />
+              </HashRouter>
+            </BranchProvider>
+          </AuthProvider>
         </ThemeProvider>
       </ThemeContext.Provider>
     </>

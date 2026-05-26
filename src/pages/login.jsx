@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logoSinFondo.png';
 import '../styles/login.css';
 import { BranchContext } from '../context/BranchContext';
+import { useAuth } from '../context/AuthContext'; // + NUEVO
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -11,6 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { refreshBranches } = useContext(BranchContext);
+  const { login } = useAuth(); // + NUEVO
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +28,7 @@ export default function Login() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, contrasena: password }),
-          signal: AbortSignal.timeout(8000), // Timeout de 8 segundos
+          signal: AbortSignal.timeout(8000),
         });
       } catch (networkErr) {
         
@@ -47,8 +49,9 @@ export default function Login() {
       const data = await response.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', username);
+      login(data.token, username); // + NUEVO: setea el rol en el contexto
       refreshBranches();
-      navigate('/inventory');
+      navigate('/Inventory');
 
     } catch (err) {
       const messages = {

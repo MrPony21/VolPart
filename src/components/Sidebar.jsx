@@ -20,6 +20,19 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import PeopleIcon from '@mui/icons-material/People';
 import Modal from "react-bootstrap/Modal";
 import "../styles/ProductoNoEncontrado.css";
+import { useAuth } from "../context/AuthContext"; 
+import { navConfig } from "../config/navConfig";  
+
+
+const iconMap = {
+  InventoryIcon:   <InventoryIcon />,
+  SellIcon:        <SellIcon />,
+  FaceIcon:        <FaceIcon />,
+  FileUploadIcon:  <FileUploadIcon />,
+  DescriptionIcon: <DescriptionIcon />,
+  ReceiptIcon:     <ReceiptIcon />,
+  PeopleIcon:      <PeopleIcon />,
+};
 
 export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
   const ModSidebaropen = () => {
@@ -28,6 +41,10 @@ export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
   const { setTheme, theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { user } = useAuth(); // + NUEVO: para leer el rol
+
+  // + NUEVO: links dinámicos según rol
+  const linksArray = navConfig[user?.rol] ?? [];
 
   const CambiarTheme = () => {
     setTheme((theme) => (theme === "light" ? "dark" : "light"));
@@ -62,7 +79,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
             to={to}
             className={({ isActive }) => `Links${isActive ? ` active` : ``}`}
           >
-            <div className="Linkicon">{icon}</div>
+            <div className="Linkicon">{iconMap[icon]}</div> {/* + NUEVO: iconMap */}
             {sidebarOpen && <span>{label}</span>}
           </NavLink>
         </div>
@@ -133,43 +150,6 @@ export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
 }
 
 //#region Data links
-const linksArray = [
-  {
-    label: "Inventario",
-    icon: <InventoryIcon />,
-    to: "/Inventory",
-  },
-  {
-    label: "Punto Venta",
-    icon: <SellIcon />,
-    to: "/Ventas",
-  },
-  {
-    label: "Ventas",
-    icon: <ReceiptIcon />,
-    to: "/Sales",
-  },
-  {
-    label: "Clientes",
-    icon: <FaceIcon />,
-    to: "/Clientes",
-  },
-  {
-    label: "Usuarios",
-    icon: <PeopleIcon />,
-    to: "/Usuarios",
-  },
-  {
-    label: "Reportes",
-    icon: <DescriptionIcon/>,
-    to: "/Reportes",
-  },
-  {
-    label: "Importar",
-    icon: <FileUploadIcon />,
-    to: "/CargarArchivo",
-  },
-];
 const secondarylinksArray = [
   {
     label: "Configuración",
