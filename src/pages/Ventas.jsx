@@ -272,7 +272,7 @@ const handleVenta = async () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Ingresar código manualmente"
+            placeholder="Ingresar UPC manualmente"
             value={manualCodigo}
             onChange={e => setManualCodigo(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleManualVerificar()}
