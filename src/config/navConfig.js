@@ -1,6 +1,7 @@
 export const navConfig = {
   ADMIN: [
     { label: "Inventario",   icon: "InventoryIcon",    to: "/Inventory" },
+    { label: "Punto Venta",  icon: "SellIcon",          to: "/Ventas" },
     { label: "Ventas",       icon: "ReceiptIcon",       to: "/Sales" },
     { label: "Clientes",     icon: "FaceIcon",          to: "/Clientes" },
     { label: "Usuarios",     icon: "PeopleIcon",        to: "/Usuarios" },

@@ -43,7 +43,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { user } = useAuth(); // + NUEVO: para leer el rol
 
-  // + NUEVO: links dinámicos según rol
+
   const linksArray = navConfig[user?.rol] ?? [];
 
   const CambiarTheme = () => {
