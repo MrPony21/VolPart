@@ -241,8 +241,18 @@ export async function actualizarUsuario(usuarioId, usuario) {
 
 export async function getRoles() {
     const response = await fetch(`${API_BASE_URL}/usuario/roles`, {
-        method: "GET", 
+        method: "GET",
         headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+}
+
+export async function cambiarContrasena(usuarioId, dto) {
+    console.log("entre a cambiar contraseña con dto", dto)
+    const response = await fetch(`${API_BASE_URL}/usuario/${usuarioId}/contrasena`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dto),
     });
     return handleResponse(response);
 }

@@ -3,16 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logoSinFondo.png';
 import '../styles/login.css';
 import { BranchContext } from '../context/BranchContext';
-import { useAuth } from '../context/AuthContext'; // + NUEVO
+import { useAuth } from '../context/AuthContext';
+import { cambiarContrasena } from '../api/api';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [passwordExpirado, setPasswordExpirado] = useState(false);
+  const [codigoUsuario, setCodigoUsuario] = useState(null);
+  const [nuevaContrasena, setNuevaContrasena] = useState('');
+  const [confirmarContrasena, setConfirmarContrasena] = useState('');
+  const [cambiando, setCambiando] = useState(false);
+
   const navigate = useNavigate();
   const { refreshBranches } = useContext(BranchContext);
-  const { login } = useAuth(); // + NUEVO
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +46,17 @@ export default function Login() {
         throw new Error('NETWORK');
       }
 
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
+        throw new Error('INVALID_CREDENTIALS');
+      }
+
+      if (response.status === 403) {
+        const data = await response.json().catch(() => ({}));
+        if (data.codigoUsuario) {
+          setCodigoUsuario(data.codigoUsuario);
+          setPasswordExpirado(true);
+          return;
+        }
         throw new Error('INVALID_CREDENTIALS');
       }
 
@@ -69,6 +87,38 @@ export default function Login() {
     }
   };
 
+  const handleCambiarContrasena = async (e) => {
+    e.preventDefault();
+    if (nuevaContrasena !== confirmarContrasena) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    if (nuevaContrasena.length < 8) {
+      setError('La nueva contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (nuevaContrasena === password) {
+      setError('La nueva contraseña debe ser diferente a la actual.');
+      return;
+    }
+    setError('');
+    setCambiando(true);
+    try {
+      await cambiarContrasena(codigoUsuario, {
+        contrasenaVieja: password,
+        contrasenaNueva: nuevaContrasena,
+      });
+      setPasswordExpirado(false);
+      setNuevaContrasena('');
+      setConfirmarContrasena('');
+      setPassword('');
+    } catch (err) {
+      setError('Error al cambiar la contraseña. Intenta de nuevo.');
+    } finally {
+      setCambiando(false);
+    }
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
@@ -81,8 +131,45 @@ export default function Login() {
         <h1 className="login-title">Bienvenido</h1>
         <p className="login-subtitle">Ap Volks</p>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="login-form">
+        {/* Formulario cambio de contraseña */}
+        {passwordExpirado && (
+          <form onSubmit={handleCambiarContrasena} className="login-form">
+            <p style={{ color: '#e65100', fontWeight: 600, marginBottom: 16 }}>
+              Tu contraseña ha vencido. Debes establecer una nueva para continuar.
+            </p>
+            <div className="form-group">
+              <label htmlFor="nuevaContrasena">Nueva contraseña</label>
+              <input
+                id="nuevaContrasena"
+                type="password"
+                value={nuevaContrasena}
+                onChange={e => setNuevaContrasena(e.target.value)}
+                required
+                disabled={cambiando}
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmarContrasena">Confirmar contraseña</label>
+              <input
+                id="confirmarContrasena"
+                type="password"
+                value={confirmarContrasena}
+                onChange={e => setConfirmarContrasena(e.target.value)}
+                required
+                disabled={cambiando}
+                className="form-input"
+              />
+            </div>
+            {error && <div className="error-message">{error}</div>}
+            <button type="submit" disabled={cambiando} className="login-button">
+              {cambiando ? 'Cambiando...' : 'Cambiar contraseña'}
+            </button>
+          </form>
+        )}
+
+        {/* Formulario login */}
+        {!passwordExpirado && <form onSubmit={handleSubmit} className="login-form">
           {/* Username */}
           <div className="form-group">
             <label htmlFor="username">Nombre de usuario</label>
@@ -124,7 +211,7 @@ export default function Login() {
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
-        </form>
+        </form>}
 
         {/* Footer */}
         {/* <div className="login-footer">
