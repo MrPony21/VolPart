@@ -80,12 +80,12 @@ const ProductoDetalle = () => {
 
     const validarCampos = (producto) => {
         console.log("Validando campos:", producto)
-        if (!producto.nombreproducto || !producto.marca || !producto.existencia || !producto.precio) {
+        if (!producto.nombreproducto || !producto.marca || producto.existencia === "" || producto.existencia === null || producto.existencia === undefined || !producto.precio) {
             return "Todos los campos deben estar completos.";
         }
 
-        if (isNaN(producto.existencia) || parseInt(producto.existencia) <= 0) {
-            return "La cantidad debe ser un número entero mayor a cero.";
+        if (isNaN(producto.existencia) || parseInt(producto.existencia) < 0) {
+            return "La cantidad debe ser un número entero mayor o igual a cero.";
         }
 
         if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
