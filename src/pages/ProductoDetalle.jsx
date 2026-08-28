@@ -30,7 +30,7 @@ const ProductoDetalle = () => {
 
     const CAMPOS_PRODUCTO = ["nombreproducto", "marca", "upc", "urlfoto"];
     // Campos que pertenecen al inventario  
-    const CAMPOS_INVENTARIO = ["existencia", "precio"];
+    const CAMPOS_INVENTARIO = ["existencia", "precio", "preciocompra"];
 
     // Obtener datos del producto desde el endpoint
     useEffect(() => {
@@ -71,7 +71,7 @@ const ProductoDetalle = () => {
 
         if (name === "existencia") {
             if (/^\d*$/.test(value)) setDatos(prev => ({ ...prev, [name]: value }))
-        } else if (name === "precio") {
+        } else if (name === "precio" || name === "preciocompra") {
             if (/^\d*\.?\d*$/.test(value)) setDatos(prev => ({ ...prev, [name]: value }))
         } else {
             setDatos(prev => ({ ...prev, [name]: value }))
@@ -92,10 +92,26 @@ const ProductoDetalle = () => {
             return "El precio debe ser un número mayor a cero.";
         }
 
+        if (producto.preciocompra === "" || producto.preciocompra === null || producto.preciocompra === undefined) {
+            return "Todos los campos deben estar completos.";
+        }
+
+        if (isNaN(producto.preciocompra) || parseFloat(producto.preciocompra) < 0) {
+            return "El precio de compra debe ser un número mayor o igual a cero.";
+        }
+
         return null;
     };
 
 
+
+    // Margen de ganancia por unidad: precio de venta menos precio de compra
+    const calcularMargen = (precio, precioCompra) => {
+        const venta = parseFloat(precio);
+        const compra = parseFloat(precioCompra);
+        if (isNaN(venta) || isNaN(compra)) return "";
+        return (venta - compra).toFixed(2);
+    };
 
     const guardarCambios = async () => {
         const mensajeValidacion = validarCampos(datos);
@@ -134,6 +150,7 @@ const ProductoDetalle = () => {
             payload.codigoInventario = selectedBranch?.codigoInventario;
             payload.existencia = parseInt(datos.existencia);
             payload.precio = parseFloat(datos.precio);
+            payload.precioCompra = parseFloat(datos.preciocompra);
         }
 
         try {
@@ -310,6 +327,25 @@ const ProductoDetalle = () => {
                             name="precio"
                             onChange={handleChange}
                             pattern="^\d+(\.\d+)?$"
+                        />
+                    </div>
+                    <div>
+                        <label>Precio de compra:</label>
+                        <input
+                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
+                            value={datos.preciocompra ?? ""}
+                            readOnly={!modoEdicion}
+                            name="preciocompra"
+                            onChange={handleChange}
+                            pattern="^\d+(\.\d+)?$"
+                        />
+                    </div>
+                    <div>
+                        <label>Margen:</label>
+                        <input
+                            className="form-control mb-2 modoEdicionInput"
+                            value={calcularMargen(datos.precio, datos.preciocompra)}
+                            readOnly
                         />
                     </div>
                 </div>

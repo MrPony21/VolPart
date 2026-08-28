@@ -138,6 +138,7 @@ const Inventory = () => {
               <option value="marca">Marca</option>
               <option value="existencia">Cantidad</option>
               <option value="precio">Precio</option>
+              <option value="preciocompra">Precio Compra</option>
             </select>
           
           <button type="button" class="btn btn-secondary button-head" 
@@ -177,6 +178,7 @@ const Inventory = () => {
               <th>Marca</th>
               <th>Existencia</th>
               <th>Precio</th>
+              <th>P. Compra</th>
               <th>Ver</th>
             </tr>
           </thead>
@@ -189,6 +191,7 @@ const Inventory = () => {
                 <td data-label="Marca:">{el.marca}</td>
                 <td data-label="Existencia:">{el.existencia}</td>
                 <td data-label="Precio:">{el.precio}</td>
+                <td data-label="P. Compra:">{el.preciocompra}</td>
                 <td data-label="">
                   <button className="btn btn-outline-secondary" onClick={() => navigate(`/ProductoDetalle?codigoProducto=${el.codigoproducto}`)}>Ver</button>
                 </td>

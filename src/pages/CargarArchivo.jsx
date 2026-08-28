@@ -45,7 +45,8 @@ const CargarArchivo = () => {
       urlFoto: product.imagen || '',
       codigoInventario: parseInt(branchId),
       existencia: parseInt(product.cantidad) || 0,
-      precio: parseFloat(product.precio) || 0
+      precio: parseFloat(product.precio) || 0,
+      precioCompra: parseFloat(product.precioCompra ?? product.costo) || 0
     }));
   };
 

@@ -26,6 +26,7 @@ const CrearProducto = () => {
         marca: productoDesdeModal?.marca || "",
         existencia: "",
         precio: productoDesdeModal?.precio || "",
+        precioCompra: "",
         imagen: ""
     })
 
@@ -55,7 +56,7 @@ const CrearProducto = () => {
     }
 
     const validarCampos = (producto) => {
-        if (!producto.upc || !producto.nombreProducto || !producto.marca || !producto.existencia || !producto.precio) {
+        if (!producto.upc || !producto.nombreProducto || !producto.marca || !producto.existencia || !producto.precio || producto.precioCompra === "") {
             return "Todos los campos deben estar completos.";
         }
 
@@ -65,6 +66,10 @@ const CrearProducto = () => {
 
         if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
             return "El precio debe ser un número mayor a cero.";
+        }
+
+        if (isNaN(producto.precioCompra) || parseFloat(producto.precioCompra) < 0) {
+            return "El precio de compra debe ser un número mayor o igual a cero.";
         }
 
         return null; // todo está bien
@@ -90,7 +95,8 @@ const CrearProducto = () => {
                     codigoProducto: parseInt(productoNuevo.codigoProducto),
                     codigoInventario: branchId ? parseInt(branchId) : null,
                     existencia: parseInt(productoNuevo.existencia),
-                    precio: parseFloat(productoNuevo.precio)
+                    precio: parseFloat(productoNuevo.precio),
+                    precioCompra: parseFloat(productoNuevo.precioCompra)
                 };
                 productoCreado = await agregarInventarioProducto(payload);
             } else {
@@ -101,6 +107,7 @@ const CrearProducto = () => {
                 formData.append('marca', productoNuevo.marca);
                 formData.append('existencia', parseInt(productoNuevo.existencia));
                 formData.append('precio', parseFloat(productoNuevo.precio));
+                formData.append('precioCompra', parseFloat(productoNuevo.precioCompra));
                 formData.append('codigoInventario', branchId ? parseInt(branchId) : '');
 
                 if (imagenFile) {
@@ -179,6 +186,10 @@ const CrearProducto = () => {
                 <div>
                     <label>Precio:</label>
                     <input className='form-control mb-2' value={productoNuevo.precio} name="precio" onChange={onChangeInput}></input>
+                </div>
+                <div>
+                    <label>Precio de compra:</label>
+                    <input className='form-control mb-2' value={productoNuevo.precioCompra} name="precioCompra" onChange={onChangeInput}></input>
                 </div>
             </div>
 

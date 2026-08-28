@@ -24,6 +24,7 @@ const Ventas = () => {
   const [clientes, setClientes] = useState([]);
   const [clienteEncontrado, setClienteEncontrado] = useState(false);
   const [manualCodigo, setManualCodigo] = useState("");
+  const [manualCodigoProducto, setManualCodigoProducto] = useState("");
   const { selectedBranch } = useContext(BranchContext);
   
 
@@ -79,34 +80,51 @@ const Ventas = () => {
     setManualCodigo("");
   };
 
+  const handleManualCodigoProductoVerificar = () => {
+    const codigo = manualCodigoProducto.trim();
+    if (!codigo) return;
+    const codigoNumero = Number(codigo);
+    const producto = products.find(p => Number(p.codigoproducto) === codigoNumero);
+    if (producto) {
+      agregarProductoAVenta(producto);
+    } else {
+      setAlertMsg(`No se encontró el producto con código de producto ${codigo}`);
+    }
+    setManualCodigoProducto("");
+  };
+
   const handleEliminarProducto = (codigoproducto) => {
     setVentasList(prev => prev.filter(item => item.codigoproducto !== codigoproducto));
+  };
+
+  const agregarProductoAVenta = (producto) => {
+    setVentasList(prev => {
+      const idx = prev.findIndex(item => item.codigoproducto === producto.codigoproducto);
+      if (idx !== -1) {
+        if (prev[idx].cantidadVenta < producto.existencia) {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], cantidadVenta: updated[idx].cantidadVenta + 1 };
+          return updated;
+        } else {
+          setAlertMsg(`No hay suficiente stock para ${producto.nombreproducto}`);
+          return prev;
+        }
+      }
+      if (producto.existencia > 0) {
+        return [...prev, { ...producto, cantidadVenta: 1 }];
+      } else {
+        setAlertMsg(`No hay stock disponible para ${producto.nombreproducto}`);
+        return prev;
+      }
+    });
+    setAlertMsg("");
   };
 
   const handleScan = (codigo) => {
     const codigoLimpio = codigo.trim();
     const producto = products.find(p => p.upc === codigoLimpio);
     if (producto) {
-      setVentasList(prev => {
-        const idx = prev.findIndex(item => item.codigoproducto === producto.codigoproducto);
-        if (idx !== -1) {
-          if (prev[idx].cantidadVenta < producto.existencia) {
-            const updated = [...prev];
-            updated[idx] = { ...updated[idx], cantidadVenta: updated[idx].cantidadVenta + 1 };
-            return updated;
-          } else {
-            setAlertMsg(`No hay suficiente stock para ${producto.nombreproducto}`);
-            return prev;
-          }
-        }
-        if (producto.existencia > 0) {
-          return [...prev, { ...producto, cantidadVenta: 1 }];
-        } else {
-          setAlertMsg(`No hay stock disponible para ${producto.nombreproducto}`);
-          return prev;
-        }
-      });
-      setAlertMsg("");
+      agregarProductoAVenta(producto);
     } else {
       setAlertMsg(`No se encontró el producto con código ${codigoLimpio}`);
     }
@@ -278,6 +296,19 @@ const handleVenta = async () => {
             onKeyDown={e => e.key === "Enter" && handleManualVerificar()}
           />
           <button className="btn btn-primary" onClick={handleManualVerificar}>
+            Verificar
+          </button>
+        </div>
+        <div className="ventas-manual-row">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Ingresar código de producto"
+            value={manualCodigoProducto}
+            onChange={e => /^\d*$/.test(e.target.value) && setManualCodigoProducto(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleManualCodigoProductoVerificar()}
+          />
+          <button className="btn btn-primary" onClick={handleManualCodigoProductoVerificar}>
             Verificar
           </button>
         </div>
