@@ -21,10 +21,10 @@ export const allowedRoutes = {
   ADMIN: [
     "/Inventory", "/ProductoDetalle", "/CrearProducto",
     "/Ventas", "/Clientes", "/Reportes", "/CargarArchivo",
-    "/Sales", "/Usuarios", "/CrearUsuario",
+    "/Sales", "/VentaDetalle", "/Usuarios", "/CrearUsuario",
   ],
   OPERADOR: [
     "/Inventory", "/ProductoDetalle", "/CrearProducto",
-    "/Ventas", "/Clientes", "/Reportes", "/Sales",
+    "/Ventas", "/Clientes", "/Reportes", "/Sales", "/VentaDetalle",
   ],
 };

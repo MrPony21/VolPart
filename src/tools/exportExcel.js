@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { costoItem, gananciaItem, tieneItemSinCosto, OBSERVACION_SIN_COSTO } from './ventas';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -242,7 +243,14 @@ export async function exportarClientesExcel(clientes) {
 
 // ─── Exportar Ventas ─────────────────────────────────────────────────────────
 
-export async function exportarVentasExcel(ventas, nombreSucursal) {
+export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {}) {
+  // incluirGanancia solo lo manda el administrador; el operador recibe el
+  // mismo reporte de siempre, sin costos ni ganancia.
+  const { incluirGanancia = false, etiquetaPeriodo = null } = opciones;
+
+
+  const sufijoTitulo = etiquetaPeriodo ? ` — ${etiquetaPeriodo}` : '';
+
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'VolPart';
 
@@ -257,14 +265,24 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
     { header: 'Dirección',    key: 'direccion',     width: 36 },
     { header: 'Total (Q)',    key: 'total',         width: 14 },
   ];
+  if (incluirGanancia) {
+    colsV.push(
+      { header: 'Costo T (Q)',    key: 'costo',       width: 14 },
+      { header: 'Ganancia (Q)', key: 'ganancia',    width: 14 },
+      { header: 'Observación',  key: 'observacion', width: 48 },
+    );
+  }
   wsV.columns = colsV;
 
-  const dsV = insertHeader(wsV, 'Resumen de Ventas', nombreSucursal, colsV.length);
+  const dsV = insertHeader(wsV, `Resumen de Ventas${sufijoTitulo}`, nombreSucursal, colsV.length);
   const hrV = wsV.getRow(dsV);
   colsV.forEach((col, i) => { const c = hrV.getCell(i + 1); c.value = col.header; styleHeaderCell(c); });
   hrV.height = 26;
 
   let totalGeneral = 0;
+  let totalCostoV = 0;
+  let totalGananciaV = 0;
+
   ventas.forEach((v, idx) => {
     const row = wsV.getRow(dsV + 1 + idx);
     row.height = 20;
@@ -278,6 +296,15 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
       v.cliente?.direccion ?? '-',
       total,
     ];
+
+    if (incluirGanancia) {
+      const costo = (v.items ?? []).reduce((acc, item) => acc + costoItem(item), 0);
+      const ganancia = (v.items ?? []).reduce((acc, item) => acc + gananciaItem(item), 0);
+      totalCostoV += costo;
+      totalGananciaV += ganancia;
+      values.push(costo, ganancia, tieneItemSinCosto(v) ? OBSERVACION_SIN_COSTO : '');
+    }
+
     values.forEach((val, i) => {
       const cell = row.getCell(i + 1);
       cell.value = val;
@@ -285,6 +312,12 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
     });
     row.getCell(7).numFmt = '#,##0.00';
     row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+    if (incluirGanancia) {
+      row.getCell(8).numFmt = '#,##0.00';
+      row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(9).numFmt = '#,##0.00';
+      row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
+    }
   });
 
   // Fila total
@@ -294,13 +327,15 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
     const cell = trV.getCell(i + 1);
     if (i === 5) { cell.value = 'TOTAL GENERAL'; styleTotalCell(cell); }
     else if (i === 6) { cell.value = totalGeneral; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && i === 7) { cell.value = totalCostoV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && i === 8) { cell.value = totalGananciaV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
     else styleTotalCell(cell);
   });
 
   wsV.views = [{ state: 'frozen', ySplit: dsV, activeCell: `A${dsV + 1}` }];
 
-  // ── Hoja 2: Detalle de ítems ───────────────────────────────────────────────
-  const wsI = workbook.addWorksheet('Detalle Items');
+  // ── Hoja 2: Detalle de ventas ──────────────────────────────────────────────
+  const wsI = workbook.addWorksheet('Detalle Ventas');
   const colsI = [
     { header: 'Código Venta',     key: 'codigoVenta',    width: 15 },
     { header: 'N° Serie',         key: 'numeroSerie',    width: 18 },
@@ -311,15 +346,26 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
     { header: 'Precio Unit. (Q)', key: 'precioVenta',    width: 16 },
     { header: 'Subtotal (Q)',     key: 'totalItem',      width: 15 },
   ];
+  if (incluirGanancia) {
+    colsI.push(
+      { header: 'P. Compra Unit. (Q)', key: 'precioCompra', width: 20 },
+      { header: 'Costo T (Q)',           key: 'costo',        width: 14 },
+      { header: 'Ganancia (Q)',        key: 'ganancia',     width: 14 },
+      { header: 'Observación',         key: 'observacion',  width: 48 },
+    );
+  }
   wsI.columns = colsI;
 
-  const dsI = insertHeader(wsI, 'Detalle de Items por Venta', nombreSucursal, colsI.length);
+  const dsI = insertHeader(wsI, `Detalle de Ventas${sufijoTitulo}`, nombreSucursal, colsI.length);
   const hrI = wsI.getRow(dsI);
   colsI.forEach((col, i) => { const c = hrI.getCell(i + 1); c.value = col.header; styleHeaderCell(c); });
   hrI.height = 26;
 
   let rowIdx = 0;
   let totalItems = 0;
+  let totalCostoI = 0;
+  let totalGananciaI = 0;
+
   ventas.forEach(v => {
     v.items?.forEach(item => {
       const producto = item.inventarioProducto?.producto;
@@ -337,6 +383,16 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
         parseFloat(item.precioVenta),
         subtotal,
       ];
+
+      if (incluirGanancia) {
+        const precioCompra = parseFloat(item.precioCompra ?? 0);
+        const costo = precioCompra * item.cantidad;
+        const ganancia = gananciaItem(item);
+        totalCostoI += costo;
+        totalGananciaI += ganancia;
+        values.push(precioCompra, costo, ganancia, precioCompra === 0 ? OBSERVACION_SIN_COSTO : '');
+      }
+
       values.forEach((val, i) => {
         const cell = row.getCell(i + 1);
         cell.value = val;
@@ -347,6 +403,12 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
       row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
       row.getCell(8).numFmt = '#,##0.00';
       row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
+      if (incluirGanancia) {
+        [9, 10, 11].forEach((n) => {
+          row.getCell(n).numFmt = '#,##0.00';
+          row.getCell(n).alignment = { horizontal: 'right', vertical: 'middle' };
+        });
+      }
       rowIdx++;
     });
   });
@@ -358,13 +420,16 @@ export async function exportarVentasExcel(ventas, nombreSucursal) {
     const cell = trI.getCell(i + 1);
     if (i === 6) { cell.value = 'TOTAL'; styleTotalCell(cell); }
     else if (i === 7) { cell.value = totalItems; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && i === 9) { cell.value = totalCostoI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && i === 10) { cell.value = totalGananciaI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
     else styleTotalCell(cell);
   });
 
   wsI.views = [{ state: 'frozen', ySplit: dsI, activeCell: `A${dsI + 1}` }];
 
   const dt = getDateTime();
-  const fileName = `ventas-${sanitize(nombreSucursal)}-${dt}.xlsx`;
+  const periodo = etiquetaPeriodo ? `-${sanitize(etiquetaPeriodo)}` : '';
+  const fileName = `ventas-${sanitize(nombreSucursal)}${periodo}-${dt}.xlsx`;
   const buffer = await workbook.xlsx.writeBuffer();
   downloadBuffer(buffer, fileName);
 }

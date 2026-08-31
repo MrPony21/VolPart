@@ -130,6 +130,15 @@ export async function importProduct(productos, codigoInventario){
     return handleResponse(response);
 }
 
+// Historial de movimientos de un producto: existencia, precio y precio de compra
+export async function getHistorialProducto(codigoProducto, codigoInventario){
+    const response = await fetch(`${API_BASE_URL}/movimiento/producto/${codigoProducto}?codigoInventario=${codigoInventario}`, {
+        method: "GET",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+}
+
 // Funciones de Clientes
 export async function getClientes() {
     const response = await fetch(`${API_BASE_URL}/cliente`, {
@@ -187,6 +196,16 @@ export async function getSales(codigoInventario) {
   });
   return handleResponse(response);
 }
+
+// Una venta puntual, con su cliente y sus items
+export async function getSale(codigoVenta) {
+  const response = await fetch(`${API_BASE_URL}/venta/${codigoVenta}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
 
 /** Importa un array de ventas (incluso vacío) */
 export async function importVentas(ventas) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { updateProduct, getProductIndividual, getProductoByCodigoProductoInventario } from '../api/api';
+import { updateProduct, getProductIndividual, getProductoByCodigoProductoInventario, getHistorialProducto } from '../api/api';
 import Alert from '@mui/material/Alert';
 import { generatePdfWithBarcode } from '../tools/barcode';
 import logo from "../assets/logonuevo.jpg";
@@ -27,6 +27,9 @@ const ProductoDetalle = () => {
     const [imagenFile, setImagenFile] = useState(null);
     const [imagenPreview, setImagenPreview] = useState(null);
     const [guardando, setGuardando] = useState(false);
+    const [historial, setHistorial] = useState([]);
+    const [cargandoHistorial, setCargandoHistorial] = useState(false);
+    const [historialCargado, setHistorialCargado] = useState(false);
 
     const CAMPOS_PRODUCTO = ["nombreproducto", "marca", "upc", "urlfoto"];
     // Campos que pertenecen al inventario  
@@ -113,6 +116,44 @@ const ProductoDetalle = () => {
         return (venta - compra).toFixed(2);
     };
 
+    const cargarHistorial = async () => {
+        if (!selectedBranch?.codigoInventario || !codigoProductoFromUrl) return;
+        try {
+            setCargandoHistorial(true);
+            const movimientos = await getHistorialProducto(codigoProductoFromUrl, selectedBranch.codigoInventario);
+            setHistorial(movimientos);
+            setHistorialCargado(true);
+        } catch (err) {
+            console.error("Error al obtener el historial del producto:", err);
+            setError("No se pudo cargar el historial del producto.");
+        } finally {
+            setCargandoHistorial(false);
+        }
+    };
+
+    useEffect(() => {
+        // Al cambiar de producto o sucursal, el historial cargado deja de servir
+        setHistorial([]);
+        setHistorialCargado(false);
+    }, [codigoProductoFromUrl, selectedBranch]);
+
+    const formatearFecha = (fecha) => {
+        if (!fecha) return "—";
+        return new Date(fecha).toLocaleString("es-GT");
+    };
+
+    // Solo muestra el cambio cuando el valor realmente se movio
+    const formatearCambio = (anterior, nueva, delta) => {
+        if (anterior === nueva) return "—";
+        const signo = delta > 0 ? `+${delta}` : `${delta}`;
+        return `${anterior} → ${nueva} (${signo})`;
+    };
+
+    const formatearCambioPrecio = (anterior, nuevo) => {
+        if (anterior === nuevo) return "—";
+        return `Q${anterior.toFixed(2)} → Q${nuevo.toFixed(2)}`;
+    };
+
     const guardarCambios = async () => {
         const mensajeValidacion = validarCampos(datos);
         if (mensajeValidacion) {
@@ -175,6 +216,7 @@ const ProductoDetalle = () => {
             setImagenFile(null);
             setImagenPreview(null);
             setActualizadoAlert(true);
+            if (historialCargado) await cargarHistorial();
             setError("");
         } catch (err) {
             console.error("Error al actualizar", err);
@@ -370,6 +412,60 @@ const ProductoDetalle = () => {
                     ) : (
                         modoEdicion && <p style={{ color: "#999", margin: 0 }}>Sin imagen — selecciona un archivo para agregar una.</p>
                     )}
+                </div>
+            )}
+
+            <h4 style={{ marginTop: 25, marginBottom: 15, borderBottom: "2px solid #6c757d", paddingBottom: 10, color: "#333" }}>
+                Historial de movimientos
+            </h4>
+
+            {!historialCargado && (
+                <button
+                    className="btn btn-outline-secondary"
+                    onClick={cargarHistorial}
+                    disabled={cargandoHistorial}
+                >
+                    {cargandoHistorial ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Cargando historial...
+                        </>
+                    ) : "Ver historial"}
+                </button>
+            )}
+
+            {historialCargado && historial.length === 0 && (
+                <p style={{ color: "#999" }}>Este producto todavía no tiene movimientos registrados.</p>
+            )}
+
+            {historialCargado && historial.length > 0 && (
+                <div className="table-responsive">
+                    <table className="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Motivo</th>
+                                <th>Existencia</th>
+                                <th>Precio</th>
+                                <th>P. Compra</th>
+                                <th>Usuario</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {historial.map((m) => (
+                                <tr key={m.codigoMovimiento}>
+                                    <td data-label="Fecha:">{formatearFecha(m.fechaMovimiento)}</td>
+                                    <td data-label="Motivo:">{m.tipoMovimiento}</td>
+                                    <td data-label="Existencia:">{formatearCambio(m.existenciaAnterior, m.existenciaNueva, m.cantidadMovida)}</td>
+                                    <td data-label="Precio:">{formatearCambioPrecio(m.precioAnterior, m.precioNuevo)}</td>
+                                    <td data-label="P. Compra:">{formatearCambioPrecio(m.precioCompraAnterior, m.precioCompraNuevo)}</td>
+                                    <td data-label="Usuario:">{m.nombreUsuario || "—"}</td>
+                                    <td data-label="Detalle:">{m.numeroSerie ? `Venta ${m.numeroSerie}` : (m.observacion || "—")}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
 

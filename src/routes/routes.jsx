@@ -7,6 +7,7 @@ import CargarArchivo from "../pages/CargarArchivo";
 import Ventas from "../pages/Ventas";
 import Clientes from "../pages/Clientes";
 import Sales from "../pages/Sales";
+import VentaDetalle from "../pages/VentaDetalle";
 import Login from "../pages/login";
 import Usuarios from "../pages/Usuarios";
 import RegistrarUsuarios from "../pages/RegistrarUsuarios";
@@ -39,6 +40,7 @@ const AppRouter = () => {
       <Route path="/Reportes"        element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
       <Route path="/CargarArchivo"   element={<ProtectedRoute><CargarArchivo /></ProtectedRoute>} />
       <Route path="/Sales"           element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+      <Route path="/VentaDetalle"    element={<ProtectedRoute><VentaDetalle /></ProtectedRoute>} />
       <Route path="/Usuarios"        element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
       <Route path="/CrearUsuario"    element={<ProtectedRoute><RegistrarUsuarios /></ProtectedRoute>} />
 

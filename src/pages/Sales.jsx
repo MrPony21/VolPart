@@ -1,7 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { getSales } from '../api/api';
+import { useNavigate } from 'react-router-dom';
 import "../styles/Sales.css";
 import { BranchContext } from '../context/BranchContext';
+import { useAuth } from '../context/AuthContext';
+import {
+  adjustFecha,
+  formatFecha,
+  quetzales,
+  gananciaVenta,
+  tieneItemSinCosto,
+} from '../tools/ventas';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -17,21 +26,6 @@ import 'dayjs/locale/es';
 
 const PAGE_SIZE = 10;
 
-const adjustFecha = (isoStr) => {
-  if (!isoStr) return null;
-  return new Date(new Date(isoStr).getTime() - 6 * 60 * 60 * 1000);
-};
-
-const formatFecha = (isoStr) => {
-  const date = adjustFecha(isoStr);
-  if (!date) return "";
-  const dd = String(date.getUTCDate()).padStart(2, '0');
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const yyyy = date.getUTCFullYear();
-  const hh = String(date.getUTCHours()).padStart(2, '0');
-  const min = String(date.getUTCMinutes()).padStart(2, '0');
-  return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-};
 
 const Sales = () => {
   const [ventas, setVentas] = useState([]);
@@ -41,6 +35,10 @@ const Sales = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [fotoModal, setFotoModal] = useState({ open: false, url: "", nombre: "" });
   const { selectedBranch } = useContext(BranchContext);
+  const { user } = useAuth();
+  // La ganancia deja ver el costo de compra: solo el admin la ve
+  const esAdmin = user?.rol === "ADMIN";
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (selectedBranch?.codigoInventario) {
@@ -162,6 +160,14 @@ const Sales = () => {
                       Fecha: {formatFecha(venta.fechaIngreso)}
                     </span>
                   )}
+                  <div style={{ marginTop: 6 }}>
+                    <button
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => navigate(`/VentaDetalle?codigoVenta=${venta.codigoVenta}`)}
+                    >
+                      Ver detalle
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -215,7 +221,17 @@ const Sales = () => {
                     return (
                       <tr key={item.codigoItemVenta}>
                         <td>{idx + 1}</td>
-                        <td>{producto?.codigoProducto ?? item.codigoInventarioProducto}</td>
+                        <td>
+                          {producto?.codigoProducto ? (
+                            <button
+                              className="btn btn-link btn-sm p-0"
+                              title="Ver el producto"
+                              onClick={() => navigate(`/ProductoDetalle?codigoProducto=${producto.codigoProducto}`)}
+                            >
+                              {producto.codigoProducto}
+                            </button>
+                          ) : item.codigoInventarioProducto}
+                        </td>
                         <td>{producto?.nombreProducto ?? "-"}</td>
                         <td>{producto?.upc ?? "-"}</td>
                         <td>{item.cantidad}</td>
@@ -239,7 +255,23 @@ const Sales = () => {
               </table>
 
               <div className="sales-total">
-                TOTAL: Q{parseFloat(venta.total).toFixed(2)}
+                {esAdmin && (
+                  <>
+                    {tieneItemSinCosto(venta) && (
+                      <span
+                        className="badge bg-warning text-dark"
+                        style={{ marginRight: 12, fontWeight: 500, fontSize: 12 }}
+                        title="Esta venta tiene productos sin precio de compra registrado: esos productos no suman ganancia"
+                      >
+                        No tiene costo registrado
+                      </span>
+                    )}
+                    <span style={{ color: "#0d6efd", marginRight: 24 }}>
+                      GANANCIA: {quetzales(gananciaVenta(venta))}
+                    </span>
+                  </>
+                )}
+                TOTAL: {quetzales(venta.total)}
               </div>
             </div>
           ))
