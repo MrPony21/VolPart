@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
-import { registrarUsuario, getRoles } from '../api/api';
+import { registrarUsuario, getRoles, obtenerUsuarios } from '../api/api';
 import "../styles/CrearProducto.css"
 
 const RegistrarUsuarios = () => {
@@ -10,6 +10,8 @@ const RegistrarUsuarios = () => {
     const [success, setSuccess] = useState("");
     const [roles, setRoles] = useState([]);
     const [rolesLoading, setRolesLoading] = useState(true);
+    const [usuariosExistentes, setUsuariosExistentes] = useState([]);
+    const [registrando, setRegistrando] = useState(false);
 
     const [usuario, setUsuario] = useState({
         nombre: "",
@@ -36,7 +38,18 @@ const RegistrarUsuarios = () => {
             }
         };
 
+        // Si falla, la validacion de nombre repetido queda del lado del backend
+        const cargarUsuariosExistentes = async () => {
+            try {
+                const data = await obtenerUsuarios();
+                setUsuariosExistentes(data);
+            } catch (err) {
+                console.error("Error al cargar usuarios existentes:", err);
+            }
+        };
+
         cargarRoles();
+        cargarUsuariosExistentes();
     }, []);
 
     const handleChange = (e) => {
@@ -71,6 +84,23 @@ const RegistrarUsuarios = () => {
             return "Las contraseñas no coinciden.";
         }
 
+        // La columna es VARCHAR(255): mas largo lo rechaza la base con un 500
+        if (usuario.nombre.length > 255) {
+            return "El nombre de usuario no puede pasar de 255 caracteres.";
+        }
+
+        if (!usuario.rol || Number(usuario.rol) === 0) {
+            return "Selecciona un rol para el usuario.";
+        }
+
+        // El backend lo valida igual, pero asi el aviso es inmediato
+        const nombreRepetido = usuariosExistentes.some(
+            (u) => u.NombreUsuario?.toLowerCase() === usuario.nombre.trim().toLowerCase()
+        );
+        if (nombreRepetido) {
+            return "Ya existe un usuario con ese nombre.";
+        }
+
         return null;
     };
 
@@ -91,6 +121,7 @@ const RegistrarUsuarios = () => {
         };
 
         try {
+            setRegistrando(true);
             const resultado = await registrarUsuario(usuarioData);
             setSuccess(`Usuario "${usuario.nombre}" registrado correctamente.`);
             
@@ -107,9 +138,17 @@ const RegistrarUsuarios = () => {
                 navigate("/Usuarios");
             }, 2000);
         } catch (err) {
-            const mensajeLimpio = err.message?.split('Error: ').pop() || 'Error inesperado al registrar usuario';
-            setError(mensajeLimpio);
+            // Un 500 en este endpoint casi siempre es el nombre repetido chocando
+            // contra el indice unico de la base.
+            const mensaje = err.message?.split('Error: ').pop() || '';
+            setError(
+                mensaje && mensaje !== 'Internal server error'
+                    ? mensaje
+                    : 'No se pudo registrar el usuario. Es posible que el nombre ya esté en uso.'
+            );
             console.error("Error al registrar usuario:", err);
+        } finally {
+            setRegistrando(false);
         }
     };
 
@@ -227,8 +266,9 @@ const RegistrarUsuarios = () => {
                     <button
                         className="btn btn-success"
                         onClick={registrar}
+                        disabled={registrando}
                     >
-                        Registrar Usuario
+                        {registrando ? "Registrando..." : "Registrar Usuario"}
                     </button>
                 </div>
             </div>

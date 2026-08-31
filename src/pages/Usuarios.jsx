@@ -15,6 +15,10 @@ const Usuarios = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  // El error del modal va aparte: el Alert de la pagina queda tapado por el
+  // backdrop y el usuario nunca se entera de por que fallo.
+  const [errorModal, setErrorModal] = useState("");
+  const [guardando, setGuardando] = useState(false);
   const [usuarioEditado, setUsuarioEditado] = useState({
     NombreUsuario: "",
     contrasena: "",
@@ -60,38 +64,68 @@ const Usuarios = () => {
       contrasena: "",
       CodigoRol: usuario.CodigoRol
     });
+    setErrorModal("");
     setShowEditModal(true);
   };
 
-  const guardarCambios = async () => {
-    if (!usuarioEditado.NombreUsuario) {
-      setError("El nombre de usuario es obligatorio.");
-      return;
+  // Espeja las validaciones del backend para avisar antes de mandar la peticion
+  const validarUsuario = () => {
+    const nombre = usuarioEditado.NombreUsuario.trim();
+
+    if (!nombre) return "El nombre de usuario es obligatorio.";
+    if (nombre.includes(" ")) return "El nombre de usuario no puede contener espacios.";
+
+    // El backend lo valida igual, pero asi el aviso es inmediato
+    const nombreRepetido = usuarios.some(
+      (u) =>
+        u.CodigoUsuario !== usuarioSeleccionado?.CodigoUsuario &&
+        u.NombreUsuario?.toLowerCase() === nombre.toLowerCase()
+    );
+    if (nombreRepetido) return "Ya existe un usuario con ese nombre.";
+
+    if (!usuarioEditado.CodigoRol || Number(usuarioEditado.CodigoRol) === 0) {
+      return "Selecciona un rol para el usuario.";
     }
 
-    if (usuarioEditado.NombreUsuario.includes(" ")) {
-      setError("El nombre de usuario no puede contener espacios.");
+    // Vacia significa "no cambiarla"; si viene, debe cumplir el minimo del backend
+    if (usuarioEditado.contrasena && usuarioEditado.contrasena.length < 8) {
+      return "La contraseña debe tener al menos 8 caracteres.";
+    }
+
+    return null;
+  };
+
+  const guardarCambios = async () => {
+    const mensajeValidacion = validarUsuario();
+    if (mensajeValidacion) {
+      setErrorModal(mensajeValidacion);
       return;
     }
 
     try {
+      setGuardando(true);
       const payloadActualizacion = {
-        NombreUsuario: usuarioEditado.NombreUsuario,
+        NombreUsuario: usuarioEditado.NombreUsuario.trim(),
         CodigoRol: Number(usuarioEditado.CodigoRol)
       };
-      
+
       // Solo incluir contraseña si se proporciona
       if (usuarioEditado.contrasena) {
         payloadActualizacion.contrasena = usuarioEditado.contrasena;
       }
-      
+
       await actualizarUsuario(usuarioSeleccionado.CodigoUsuario, payloadActualizacion);
       setShowEditModal(false);
+      setErrorModal("");
       cargarUsuarios();
       setError("");
     } catch (err) {
       console.error("Error al actualizar usuario:", err);
-      setError("Error al actualizar el usuario.");
+      // El backend manda el detalle real; antes se descartaba y se mostraba
+      // siempre el mismo texto generico.
+      setErrorModal(err.message || "No se pudo actualizar el usuario.");
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -219,6 +253,11 @@ const Usuarios = () => {
         <Modal.Body>
           {usuarioSeleccionado && (
             <div>
+              {errorModal && (
+                <Alert variant="filled" severity="error" style={{ marginBottom: 16 }}>
+                  {errorModal}
+                </Alert>
+              )}
               <div className="mb-3">
                 <label className="form-label">Nombre de Usuario:</label>
                 <input
@@ -240,6 +279,7 @@ const Usuarios = () => {
                   onChange={(e) => setUsuarioEditado({ ...usuarioEditado, contrasena: e.target.value })}
                   placeholder="Ingresa nueva contraseña si deseas cambiarla"
                 />
+                <small className="text-muted">Mínimo 8 caracteres.</small>
               </div>
               <div className="mb-3">
                 <label className="form-label">Rol:</label>
@@ -266,8 +306,8 @@ const Usuarios = () => {
           <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>
             Cancelar
           </button>
-          <button className="btn btn-primary" onClick={guardarCambios}>
-            Guardar Cambios
+          <button className="btn btn-primary" onClick={guardarCambios} disabled={guardando}>
+            {guardando ? "Guardando..." : "Guardar Cambios"}
           </button>
         </Modal.Footer>
       </Modal>

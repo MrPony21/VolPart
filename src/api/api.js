@@ -31,7 +31,11 @@ const handleResponse = async (response) => {
   
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || `Error HTTP ${response.status}`);
+    // NestJS manda un arreglo cuando falla la validacion de varios campos
+    const detalle = Array.isArray(error.message)
+      ? error.message.join(". ")
+      : error.message;
+    throw new Error(detalle || `Error HTTP ${response.status}`);
   }
   
   return response.json();
