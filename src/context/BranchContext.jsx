@@ -10,6 +10,7 @@ export function BranchProvider({ children }) {
   const [error, setError] = useState(null);
 
   const [token, setToken] = useState(localStorage.getItem("token"));
+  const [recarga, setRecarga] = useState(0);
 
   // Obtener sucursales al montar el componente
   useEffect(() => {
@@ -42,10 +43,11 @@ export function BranchProvider({ children }) {
     };
 
     fetchBranches();
-  }, [token]);
+  }, [token, recarga]);
  
   const refreshBranches = () => {
     setToken(localStorage.getItem("token"));
+    setRecarga((n) => n + 1);
   };
 
   // Guardar sucursal seleccionada en localStorage

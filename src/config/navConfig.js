@@ -21,7 +21,7 @@ export const allowedRoutes = {
   ADMIN: [
     "/Inventory", "/ProductoDetalle", "/CrearProducto",
     "/Ventas", "/Clientes", "/Reportes", "/CargarArchivo",
-    "/Sales", "/VentaDetalle", "/Usuarios", "/CrearUsuario",
+    "/Sales", "/VentaDetalle", "/Usuarios", "/CrearUsuario", "/CrearSucursal",
   ],
   OPERADOR: [
     "/Inventory", "/ProductoDetalle", "/CrearProducto",

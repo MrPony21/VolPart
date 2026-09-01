@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { BranchContext } from '../context/BranchContext';
+import { useAuth } from '../context/AuthContext';
 
 export function BranchSelector() {
   const { branches, selectedBranch, changeBranch, loading } = useContext(BranchContext);
@@ -9,6 +10,8 @@ export function BranchSelector() {
   const [tempBranch, setTempBranch] = useState(selectedBranch?.nombreInventario || "");
   const navigate = useNavigate();
   const user = localStorage.getItem("user") || "";
+  const { user: usuarioAutenticado } = useAuth();
+  const esAdmin = usuarioAutenticado?.rol === "ADMIN";
 
   if (loading) {
     return <Container>Cargando sucursales...</Container>;
@@ -27,6 +30,11 @@ export function BranchSelector() {
     changeBranch(tempBranch);
     setShowModal(false);
     navigate('/Inventory');
+  };
+
+  const handleCrearSucursal = () => {
+    setShowModal(false);
+    navigate('/CrearSucursal');
   };
 
   const handleCloseModal = () => {
@@ -79,6 +87,11 @@ export function BranchSelector() {
             </ModalBody>
 
             <ModalFooter>
+              {esAdmin && (
+                <CreateBranchButton onClick={handleCrearSucursal}>
+                  Crear sucursal
+                </CreateBranchButton>
+              )}
               <CancelButton onClick={handleCloseModal}>Cancelar</CancelButton>
               <ConfirmButton onClick={handleChangeBranch} disabled={!tempBranch}>
                 Cambiar
@@ -364,6 +377,29 @@ const ModalFooter = styled.div`
   @media (max-width: 480px) {
     padding: 16px;
     flex-direction: column;
+  }
+`;
+
+const CreateBranchButton = styled.button`
+  padding: 10px 20px;
+  background: #f97316;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  /* empuja Cancelar y Cambiar hacia la derecha */
+  margin-right: auto;
+
+  &:hover {
+    background: #ea580c;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    margin-right: 0;
   }
 `;
 

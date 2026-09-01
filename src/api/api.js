@@ -49,6 +49,15 @@ export async function getInventory(){
     });
     return handleResponse(response);
 }
+
+export async function crearSucursal(nombreInventario){
+    const response = await fetch(`${API_BASE_URL}/inventario`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ nombreInventario }),
+    });
+    return handleResponse(response);
+}
 // Funciones de Productos
 export async function getProducts(){
     const response = await fetch(`${API_BASE_URL}/Product`, {
