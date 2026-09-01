@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { BranchContext } from '../context/BranchContext';
 import { useAuth } from '../context/AuthContext';
 
-export function BranchSelector() {
+export function BranchSelector({ mostrarBotonMenu = false, onOpenMenu }) {
   const { branches, selectedBranch, changeBranch, loading } = useContext(BranchContext);
   const [showModal, setShowModal] = useState(false);
   const [tempBranch, setTempBranch] = useState(selectedBranch?.nombreInventario || "");
@@ -57,9 +57,16 @@ export function BranchSelector() {
             <Value>{selectedBranch?.nombreInventario || "Sin seleccionar"}</Value>
           </BranchInfo>
 
-          <ChangeButton onClick={handleOpenModal}>
-            Cambiar sucursal
-          </ChangeButton>
+          <ActionRow>
+            {mostrarBotonMenu && (
+              <MenuButton type="button" onClick={onOpenMenu} aria-label="Abrir menú">
+                ☰
+              </MenuButton>
+            )}
+            <ChangeButton onClick={handleOpenModal}>
+              Cambiar sucursal
+            </ChangeButton>
+          </ActionRow>
         </RightSection>
       </Container>
 
@@ -230,6 +237,37 @@ const Select = styled.select`
   }
 `;
 
+const ActionRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const MenuButton = styled.button`
+  /* Solo existe en movil: en escritorio el sidebar esta siempre visible */
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Ancho fijo para que Cambiar sucursal se quede con todo lo demas */
+    flex: 0 0 44px;
+    min-height: 42px;
+    border: 1px solid ${({ theme }) => theme.bg3 || '#ddd'};
+    border-radius: 8px;
+    background: ${({ theme }) => theme.bg || 'white'};
+    color: ${({ theme }) => theme.text || '#111827'};
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+`;
+
 const ChangeButton = styled.button`
   padding: 8px 16px;
   background: #3b82f6;
@@ -253,7 +291,8 @@ const ChangeButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    width: 100%;
+    /* Ocupa el resto de la fila, junto al boton del menu */
+    flex: 1;
     min-height: 42px;
   }
 `;

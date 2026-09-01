@@ -42,13 +42,13 @@ function AppContent() {
 
   return (
     <AppWrapper>
-      {!isLoginPage && <BranchSelector />}
-      {!isLoginPage && isMobile && sidebarOpen && <Backdrop onClick={() => setSidebarOpen(false)} />}
-      {!isLoginPage && isMobile && !sidebarOpen && (
-        <MobileSidebarToggle type="button" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
-          ☰
-        </MobileSidebarToggle>
+      {!isLoginPage && (
+        <BranchSelector
+          mostrarBotonMenu={isMobile && !sidebarOpen}
+          onOpenMenu={() => setSidebarOpen(true)}
+        />
       )}
+      {!isLoginPage && isMobile && sidebarOpen && <Backdrop onClick={() => setSidebarOpen(false)} />}
       <Container className={!isLoginPage && sidebarOpen && !isMobile ? "sidebarState active" : ""} isLoginPage={isLoginPage} isMobile={isMobile}>
         {!isLoginPage && (
           <Sidebar
@@ -129,29 +129,6 @@ const Content = styled.div`
   }
 `;
 
-const MobileSidebarToggle = styled.button`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: auto;
-    bottom: 16px;
-    left: 16px;
-    z-index: 1101;
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 12px;
-    background: ${({ theme }) => theme.bg2};
-    color: ${({ theme }) => theme.text};
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    font-size: 1.4rem;
-    line-height: 1;
-  }
-`;
 
 const Backdrop = styled.button`
   position: fixed;
