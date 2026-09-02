@@ -1,3 +1,5 @@
+import { FEATURES } from "./features";
+
 export const navConfig = {
   ADMIN: [
     { label: "Inventario",   icon: "InventoryIcon",    to: "/Inventory" },
@@ -6,7 +8,9 @@ export const navConfig = {
     { label: "Clientes",     icon: "FaceIcon",          to: "/Clientes" },
     { label: "Usuarios",     icon: "PeopleIcon",        to: "/Usuarios" },
     { label: "Reportes",     icon: "DescriptionIcon",   to: "/Reportes" },
-    { label: "Importar",     icon: "FileUploadIcon",    to: "/CargarArchivo" },
+    ...(FEATURES.CARGAR_ARCHIVO
+      ? [{ label: "Importar", icon: "FileUploadIcon",    to: "/CargarArchivo" }]
+      : []),
   ],
   OPERADOR: [
     { label: "Inventario",   icon: "InventoryIcon",    to: "/Inventory" },
@@ -20,7 +24,8 @@ export const navConfig = {
 export const allowedRoutes = {
   ADMIN: [
     "/Inventory", "/ProductoDetalle", "/CrearProducto",
-    "/Ventas", "/Clientes", "/Reportes", "/CargarArchivo",
+    "/Ventas", "/Clientes", "/Reportes",
+    ...(FEATURES.CARGAR_ARCHIVO ? ["/CargarArchivo"] : []),
     "/Sales", "/VentaDetalle", "/Usuarios", "/CrearUsuario", "/CrearSucursal",
   ],
   OPERADOR: [

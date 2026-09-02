@@ -13,6 +13,7 @@ import Login from "../pages/login";
 import Usuarios from "../pages/Usuarios";
 import RegistrarUsuarios from "../pages/RegistrarUsuarios";
 import ProtectedRoute from "../components/ProtectedRoute";
+import { FEATURES } from "../config/features";
 
 const AppRouter = () => {
   return (
@@ -39,7 +40,9 @@ const AppRouter = () => {
       <Route path="/Ventas"          element={<ProtectedRoute><Ventas /></ProtectedRoute>} />
       <Route path="/Clientes"        element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
       <Route path="/Reportes"        element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
-      <Route path="/CargarArchivo"   element={<ProtectedRoute><CargarArchivo /></ProtectedRoute>} />
+      {FEATURES.CARGAR_ARCHIVO && (
+        <Route path="/CargarArchivo" element={<ProtectedRoute><CargarArchivo /></ProtectedRoute>} />
+      )}
       <Route path="/Sales"           element={<ProtectedRoute><Sales /></ProtectedRoute>} />
       <Route path="/VentaDetalle"    element={<ProtectedRoute><VentaDetalle /></ProtectedRoute>} />
       <Route path="/CrearSucursal"   element={<ProtectedRoute><CrearSucursal /></ProtectedRoute>} />
