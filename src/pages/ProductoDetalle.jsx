@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { updateProduct, getProductIndividual, getProductoByCodigoProductoInventario, getHistorialProducto } from '../api/api';
 import Alert from '@mui/material/Alert';
+import Modal from '@mui/material/Modal';
+import Box from '@mui/material/Box';
 import { generatePdfWithBarcode } from '../tools/barcode';
 import logo from "../assets/logonuevo.jpg";
 import { BranchContext } from '../context/BranchContext';
@@ -30,6 +32,10 @@ const ProductoDetalle = () => {
     const [historial, setHistorial] = useState([]);
     const [cargandoHistorial, setCargandoHistorial] = useState(false);
     const [historialCargado, setHistorialCargado] = useState(false);
+    const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
+    const [cantidadAgregar, setCantidadAgregar] = useState("");
+    const [agregando, setAgregando] = useState(false);
+    const [agregadoAlert, setAgregadoAlert] = useState("");
 
     const CAMPOS_PRODUCTO = ["nombreproducto", "marca", "upc", "urlfoto"];
     // Campos que pertenecen al inventario  
@@ -135,6 +141,8 @@ const ProductoDetalle = () => {
         // Al cambiar de producto o sucursal, el historial cargado deja de servir
         setHistorial([]);
         setHistorialCargado(false);
+        setCantidadAgregar("");
+        setAgregadoAlert("");
     }, [codigoProductoFromUrl, selectedBranch]);
 
     const formatearFecha = (fecha) => {
@@ -226,6 +234,77 @@ const ProductoDetalle = () => {
         }
     };
 
+    const handleCantidadAgregarChange = (e) => {
+        const v = e.target.value;
+        if (/^\d*$/.test(v)) setCantidadAgregar(v);
+    };
+
+    const abrirModalAgregar = () => {
+        setCantidadAgregar("");
+        setAgregadoAlert("");
+        setError("");
+        setModalAgregarOpen(true);
+    };
+
+    // El modal solo habilita Agregar con una cantidad valida, pero la existencia
+    // resultante se calcula aqui para mostrarla antes de confirmar.
+    const cantidadAgregarNum = parseInt(cantidadAgregar, 10);
+    const cantidadAgregarValida = Number.isInteger(cantidadAgregarNum) && cantidadAgregarNum >= 1;
+    const existenciaResultante = cantidadAgregarValida
+        ? parseInt(datos?.existencia, 10) + cantidadAgregarNum
+        : null;
+
+    // Suma unidades a la existencia actual sin pasar por el modo edicion. Al
+    // ingresar mercaderia se sabe cuanto entro, no cual es el total resultante,
+    // y hacer la resta a mano es donde se cuelan los errores de inventario.
+    const agregarExistencia = async () => {
+        if (!cantidadAgregarValida) {
+            return;
+        }
+
+        if (!selectedBranch?.codigoInventario) {
+            setModalAgregarOpen(false);
+            setError("No hay una sucursal seleccionada.");
+            return;
+        }
+
+        const existenciaActual = parseInt(datos.existencia, 10);
+        if (isNaN(existenciaActual)) {
+            setModalAgregarOpen(false);
+            setError("La existencia actual no es un numero valido.");
+            return;
+        }
+
+        const cantidad = cantidadAgregarNum;
+        const nuevaExistencia = existenciaActual + cantidad;
+        setAgregando(true);
+        setAgregadoAlert("");
+
+        try {
+            // Solo viaja la existencia: precio y precio de compra quedan como
+            // estan y el backend registra el movimiento como AJUSTE.
+            await updateProduct(datos.codigoproducto, {
+                codigoInventario: selectedBranch.codigoInventario,
+                existencia: nuevaExistencia,
+            });
+
+            setDatos(prev => ({ ...prev, existencia: nuevaExistencia }));
+            setOldDatos(prev => ({ ...prev, existencia: nuevaExistencia }));
+            setCantidadAgregar("");
+            setModalAgregarOpen(false);
+            setActualizadoAlert(false);
+            setError("");
+            setAgregadoAlert(`Se agregaron ${cantidad} unidad(es). Existencia actual: ${nuevaExistencia}.`);
+            if (historialCargado) await cargarHistorial();
+        } catch (err) {
+            console.error("Error al agregar existencia", err);
+            setModalAgregarOpen(false);
+            setError("Error al agregar existencia al producto.");
+        } finally {
+            setAgregando(false);
+        }
+    };
+
     const generarCodigoBaras = () => {
     const qty = parseInt(cantidadStickers || "0", 10);
     if (!Number.isInteger(qty) || qty < 1) {
@@ -271,6 +350,11 @@ const ProductoDetalle = () => {
             {creadoAlert && (
                 <Alert variant="filled" severity="success">
                     Se ha creado correctamente el producto.
+                </Alert>
+            )}
+            {agregadoAlert && (
+                <Alert variant="filled" severity="success">
+                    {agregadoAlert}
                 </Alert>
             )}
             {!loading && error && (
@@ -351,14 +435,28 @@ const ProductoDetalle = () => {
 
                     <div>
                         <label>Existencia:</label>
-                        <input
-                            className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
-                            value={datos.existencia}
-                            readOnly={!modoEdicion}
-                            name="existencia"
-                            onChange={handleChange}
-                            pattern="^\d+$"
-                        />
+                        <div className='existencia-campo'>
+                            <input
+                                className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
+                                value={datos.existencia}
+                                readOnly={!modoEdicion}
+                                name="existencia"
+                                onChange={handleChange}
+                                pattern="^\d+$"
+                            />
+
+                            {/* En modo edicion la existencia se escribe completa; aqui solo
+                                se suma lo que entro, asi que los dos no conviven. */}
+                            {!modoEdicion && (
+                                <button
+                                    className='btn btn-success mb-2'
+                                    onClick={abrirModalAgregar}
+                                    disabled={agregando}
+                                >
+                                    Agregar
+                                </button>
+                            )}
+                        </div>
                     </div>
                     <div>
                         <label>Precio:</label>
@@ -492,7 +590,11 @@ const ProductoDetalle = () => {
                 ) : (
                     <div className='tab-button'>
                         <div className="button-edit-delete">
-                            <button className="btn btn-warning me-2" onClick={() => setModoEdicion(true)}
+                            <button className="btn btn-warning me-2" onClick={() => {
+                                setModoEdicion(true)
+                                setAgregadoAlert("")
+                                setCantidadAgregar("")
+                            }}
                             >Editar</button>
 
                         </div>
@@ -501,6 +603,69 @@ const ProductoDetalle = () => {
                 )}
 
             </div>
+
+            <Modal
+                open={modalAgregarOpen}
+                onClose={() => { if (!agregando) setModalAgregarOpen(false) }}
+                aria-labelledby="modal-agregar-title"
+            >
+                <Box className="producto-modal-box">
+                    <h4 id="modal-agregar-title">Agregar existencia</h4>
+
+                    <div className="producto-modal-info">
+                        <b>{datos.nombreproducto}</b><br />
+                        <span className="producto-info-blue">
+                            Existencia actual: {datos.existencia}
+                        </span>
+                    </div>
+
+                    <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="\d*"
+                        className="form-control"
+                        placeholder="Cantidad a agregar"
+                        value={cantidadAgregar}
+                        onChange={handleCantidadAgregarChange}
+                        onKeyDown={(e) => { if (e.key === "Enter") agregarExistencia() }}
+                        aria-label="Cantidad a agregar a la existencia"
+                        autoFocus
+                        disabled={agregando}
+                    />
+
+                    {cantidadAgregar !== "" && !cantidadAgregarValida ? (
+                        <span className="producto-modal-mensaje error">
+                            Ingresa una cantidad entera mayor o igual a 1.
+                        </span>
+                    ) : (
+                        <span className="producto-modal-mensaje preview">
+                            {existenciaResultante !== null && `Nueva existencia: ${existenciaResultante}`}
+                        </span>
+                    )}
+
+                    <div className="producto-modal-actions">
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setModalAgregarOpen(false)}
+                            disabled={agregando}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            className="btn btn-success"
+                            onClick={agregarExistencia}
+                            disabled={!cantidadAgregarValida || agregando}
+                        >
+                            {agregando ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Agregando...
+                                </>
+                            ) : "Agregar"}
+                        </button>
+                    </div>
+                </Box>
+            </Modal>
                 </>
             )}
         </div>

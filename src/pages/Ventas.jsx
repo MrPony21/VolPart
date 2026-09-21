@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getProductsByInventory, getClientes, createSale } from '../api/api';
+import { getProductsByInventory, getClientes, createSale, createCliente } from '../api/api';
 import { generarFacturaPDF } from '../tools/generarFactura';
 import ScannerInput from '../tools/ScannerInput';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,6 +23,7 @@ const Ventas = () => {
   const [fotoModal, setFotoModal] = useState({ open: false, url: "", nombre: "" });
   const [clientes, setClientes] = useState([]);
   const [clienteEncontrado, setClienteEncontrado] = useState(false);
+  const [registrandoCliente, setRegistrandoCliente] = useState(false);
   const [manualCodigo, setManualCodigo] = useState("");
   const [manualCodigoProducto, setManualCodigoProducto] = useState("");
   const { selectedBranch } = useContext(BranchContext);
@@ -72,6 +73,53 @@ const Ventas = () => {
     }
   };
 
+
+  // Un NIT que no esta en la lista solo puede facturarse como "sin cliente".
+  // Con los tres datos completos se puede dar de alta aqui mismo y la venta
+  // queda ligada al cliente, sin salir del punto de venta.
+  const datosClienteCompletos =
+    cliente.nit.trim() !== '' &&
+    cliente.nombre.trim() !== '' &&
+    cliente.telefono.trim() !== '' &&
+    cliente.direccion.trim() !== '';
+
+  const mostrarRegistrarCliente = !clienteEncontrado && cliente.nit.trim() !== '';
+
+  const registrarClienteNuevo = async () => {
+    if (!datosClienteCompletos) {
+      setAlertMsg("Completa NIT, nombre, telefono y direccion para registrar al cliente.");
+      return;
+    }
+
+    setRegistrandoCliente(true);
+    try {
+      const respuesta = await createCliente({
+        nombreCliente: cliente.nombre.trim(),
+        nit: cliente.nit.trim(),
+        telefono: cliente.telefono.trim(),
+        direccion: cliente.direccion.trim(),
+      });
+
+      // El API responde { clienteSave }; el fallback cubre un cambio de forma.
+      const nuevoCliente = respuesta?.clienteSave ?? respuesta;
+
+      setClientes(prev => [...prev, nuevoCliente]);
+      setCliente({
+        codigoCliente: nuevoCliente.codigoCliente ?? 0,
+        nit: nuevoCliente.nit,
+        nombre: nuevoCliente.nombreCliente,
+        telefono: nuevoCliente.telefono,
+        direccion: nuevoCliente.direccion,
+      });
+      setClienteEncontrado(true);
+      setAlertMsg(`Cliente ${nuevoCliente.nombreCliente} registrado correctamente.`);
+    } catch (err) {
+      console.error("Error al registrar el cliente", err);
+      setAlertMsg(err.message || "No se pudo registrar el cliente.");
+    } finally {
+      setRegistrandoCliente(false);
+    }
+  };
 
   const handleManualVerificar = () => {
     const codigo = manualCodigo.trim();
@@ -270,6 +318,29 @@ const handleVenta = async () => {
             />
           </div>
         </div>
+
+        {mostrarRegistrarCliente && (
+          <div
+            className="ventas-datosfactura-row"
+            style={{ alignItems: 'center', marginBottom: 0, marginTop: 6 }}
+          >
+            <span style={{ color: '#777', flex: 1, minWidth: 220 }}>
+              Este NIT no está registrado. Completa los datos para realizar el registro.
+            </span>
+            <button
+              className="btn btn-primary"
+              onClick={registrarClienteNuevo}
+              disabled={!datosClienteCompletos || registrandoCliente}
+            >
+              {registrandoCliente ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Registrando...
+                </>
+              ) : "Registrar cliente"}
+            </button>
+          </div>
+        )}
       </div>
 
       <h3 className="ventas-productos-title">Productos a vender</h3>

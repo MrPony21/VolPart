@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { costoItem, gananciaItem, tieneItemSinCosto, OBSERVACION_SIN_COSTO } from './ventas';
+import { costoItem, gananciaItem, tieneItemSinCosto, adjustFecha, OBSERVACION_SIN_COSTO } from './ventas';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,30 @@ function getDateTime() {
 function sanitize(str) {
   return (str ?? 'SinNombre').replace(/[/\\?%*:|"<> ]/g, '_');
 }
+
+/**
+ * Excel rechaza nombres de hoja de mas de 31 caracteres, con los caracteres
+ * []:*?/\ o repetidos dentro del mismo libro. `usados` lleva los ya tomados.
+ */
+function nombreHojaUnico(nombre, usados) {
+  const limpio = String(nombre ?? '').replace(/[[\]:*?/\\]/g, '-').trim();
+  const base = limpio.slice(0, 31) || 'Sucursal';
+  let candidato = base;
+  let n = 2;
+  while (usados.has(candidato.toLowerCase())) {
+    const sufijo = ` (${n})`;
+    candidato = base.slice(0, 31 - sufijo.length) + sufijo;
+    n++;
+  }
+  usados.add(candidato.toLowerCase());
+  return candidato;
+}
+
+// ExcelJS calcula el numero de serie de la fecha a partir del instante UTC, asi
+// que la fecha va corrida con adjustFecha -el mismo ajuste a hora de Guatemala
+// que usa el resto de la app- para que la celda muestre la hora real de la
+// venta. Sigue siendo una fecha de verdad, no texto: se ordena y se filtra.
+const FORMATO_FECHA = 'dd/mm/yyyy hh:mm';
 
 function downloadBuffer(buffer, fileName) {
   const blob = new Blob([buffer], {
@@ -126,11 +150,12 @@ function insertHeader(ws, titulo, nombreSucursal, colCount) {
 
 // ─── Exportar Inventario ─────────────────────────────────────────────────────
 
-export async function exportarInventarioExcel(productos, nombreSucursal) {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'VolPart';
-  const ws = workbook.addWorksheet('Inventario');
-
+/**
+ * Arma una hoja completa de inventario (cabecera, columnas, datos y total).
+ * Vive aparte porque el reporte general repite esta misma hoja una vez por
+ * sucursal dentro del mismo libro.
+ */
+function construirHojaInventario(ws, productos, nombreSucursal) {
   const cols = [
     { header: 'Código',     key: 'codigoproducto', width: 18 },
     { header: 'UPC',        key: 'upc',            width: 22 },
@@ -181,11 +206,44 @@ export async function exportarInventarioExcel(productos, nombreSucursal) {
 
   // Columnas anchas fijas (las definimos arriba, no hace falta autoWidth)
   ws.views = [{ state: 'frozen', ySplit: dataStartRow, activeCell: `A${dataStartRow + 1}` }];
+}
+
+/** Inventario de una sola sucursal: un libro con una hoja. */
+export async function exportarInventarioExcel(productos, nombreSucursal) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'VolPart';
+  const ws = workbook.addWorksheet('Inventario');
+
+  construirHojaInventario(ws, productos, nombreSucursal);
 
   const dt  = getDateTime();
   const fileName = `Inventario-${sanitize(nombreSucursal)}-${dt}.xlsx`;
   const buffer = await workbook.xlsx.writeBuffer();
   downloadBuffer(buffer, fileName);
+}
+
+/**
+ * Inventario general: un libro con el reporte de una sucursal en cada hoja.
+ * `sucursales` viene como [{ nombreSucursal, productos }, ...] y se respeta el
+ * orden recibido, que es el mismo en que se listan las sucursales en la app.
+ */
+export async function exportarInventarioGeneralExcel(sucursales) {
+  if (!sucursales || sucursales.length === 0) {
+    throw new Error('No hay sucursales para exportar.');
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'VolPart';
+  const nombresUsados = new Set();
+
+  sucursales.forEach(({ nombreSucursal, productos }) => {
+    const ws = workbook.addWorksheet(nombreHojaUnico(nombreSucursal, nombresUsados));
+    construirHojaInventario(ws, productos ?? [], nombreSucursal);
+  });
+
+  const dt = getDateTime();
+  const buffer = await workbook.xlsx.writeBuffer();
+  downloadBuffer(buffer, `Inventario-General-${dt}.xlsx`);
 }
 
 // ─── Exportar Clientes ───────────────────────────────────────────────────────
@@ -259,6 +317,7 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
   const colsV = [
     { header: 'Código Venta', key: 'codigoVenta',  width: 15 },
     { header: 'N° Serie',     key: 'numeroSerie',   width: 18 },
+    { header: 'Fecha',        key: 'fecha',         width: 20 },
     { header: 'Cliente',      key: 'cliente',       width: 32 },
     { header: 'NIT',          key: 'nit',           width: 16 },
     { header: 'Teléfono',     key: 'telefono',      width: 14 },
@@ -273,6 +332,10 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
     );
   }
   wsV.columns = colsV;
+
+  // Las columnas se ubican por su key y no por un numero fijo: agregar una
+  // columna en medio ya no descuadra los formatos ni la fila de totales.
+  const colV = (key) => colsV.findIndex((c) => c.key === key) + 1;
 
   const dsV = insertHeader(wsV, `Resumen de Ventas${sufijoTitulo}`, nombreSucursal, colsV.length);
   const hrV = wsV.getRow(dsV);
@@ -290,6 +353,7 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
     totalGeneral += total;
     const values = [
       v.codigoVenta, v.numeroSerie,
+      adjustFecha(v.fechaIngreso),
       v.cliente?.nombreCliente ?? 'Sin cliente',
       v.cliente?.nit ?? '-',
       v.cliente?.telefono ?? '-',
@@ -310,13 +374,16 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
       cell.value = val;
       styleDataCell(cell, idx % 2 !== 0);
     });
-    row.getCell(7).numFmt = '#,##0.00';
-    row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+
+    row.getCell(colV('fecha')).numFmt = FORMATO_FECHA;
+    row.getCell(colV('fecha')).alignment = { horizontal: 'center', vertical: 'middle' };
+    row.getCell(colV('total')).numFmt = '#,##0.00';
+    row.getCell(colV('total')).alignment = { horizontal: 'right', vertical: 'middle' };
     if (incluirGanancia) {
-      row.getCell(8).numFmt = '#,##0.00';
-      row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(9).numFmt = '#,##0.00';
-      row.getCell(9).alignment = { horizontal: 'right', vertical: 'middle' };
+      ['costo', 'ganancia'].forEach((key) => {
+        row.getCell(colV(key)).numFmt = '#,##0.00';
+        row.getCell(colV(key)).alignment = { horizontal: 'right', vertical: 'middle' };
+      });
     }
   });
 
@@ -325,10 +392,11 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
   trV.height = 22;
   colsV.forEach((_, i) => {
     const cell = trV.getCell(i + 1);
-    if (i === 5) { cell.value = 'TOTAL GENERAL'; styleTotalCell(cell); }
-    else if (i === 6) { cell.value = totalGeneral; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
-    else if (incluirGanancia && i === 7) { cell.value = totalCostoV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
-    else if (incluirGanancia && i === 8) { cell.value = totalGananciaV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    const col = i + 1;
+    if (col === colV('total') - 1) { cell.value = 'TOTAL GENERAL'; styleTotalCell(cell); }
+    else if (col === colV('total')) { cell.value = totalGeneral; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && col === colV('costo')) { cell.value = totalCostoV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && col === colV('ganancia')) { cell.value = totalGananciaV; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
     else styleTotalCell(cell);
   });
 
@@ -339,6 +407,7 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
   const colsI = [
     { header: 'Código Venta',     key: 'codigoVenta',    width: 15 },
     { header: 'N° Serie',         key: 'numeroSerie',    width: 18 },
+    { header: 'Fecha',            key: 'fecha',          width: 20 },
     { header: 'Cód. Producto',    key: 'codigoProducto', width: 16 },
     { header: 'Nombre Producto',  key: 'nombre',         width: 42 },
     { header: 'UPC',              key: 'upc',            width: 20 },
@@ -355,6 +424,8 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
     );
   }
   wsI.columns = colsI;
+
+  const colI = (key) => colsI.findIndex((c) => c.key === key) + 1;
 
   const dsI = insertHeader(wsI, `Detalle de Ventas${sufijoTitulo}`, nombreSucursal, colsI.length);
   const hrI = wsI.getRow(dsI);
@@ -376,6 +447,7 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
       const values = [
         v.codigoVenta,
         v.numeroSerie,
+        adjustFecha(v.fechaIngreso),
         producto?.codigoProducto ?? item.codigoInventarioProducto,
         producto?.nombreProducto ?? '-',
         producto?.upc ?? '-',
@@ -398,15 +470,18 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
         cell.value = val;
         styleDataCell(cell, rowIdx % 2 !== 0);
       });
-      row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(7).numFmt = '#,##0.00';
-      row.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(8).numFmt = '#,##0.00';
-      row.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
+
+      row.getCell(colI('fecha')).numFmt = FORMATO_FECHA;
+      row.getCell(colI('fecha')).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(colI('cantidad')).alignment = { horizontal: 'right', vertical: 'middle' };
+      ['precioVenta', 'totalItem'].forEach((key) => {
+        row.getCell(colI(key)).numFmt = '#,##0.00';
+        row.getCell(colI(key)).alignment = { horizontal: 'right', vertical: 'middle' };
+      });
       if (incluirGanancia) {
-        [9, 10, 11].forEach((n) => {
-          row.getCell(n).numFmt = '#,##0.00';
-          row.getCell(n).alignment = { horizontal: 'right', vertical: 'middle' };
+        ['precioCompra', 'costo', 'ganancia'].forEach((key) => {
+          row.getCell(colI(key)).numFmt = '#,##0.00';
+          row.getCell(colI(key)).alignment = { horizontal: 'right', vertical: 'middle' };
         });
       }
       rowIdx++;
@@ -418,10 +493,11 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
   trI.height = 22;
   colsI.forEach((_, i) => {
     const cell = trI.getCell(i + 1);
-    if (i === 6) { cell.value = 'TOTAL'; styleTotalCell(cell); }
-    else if (i === 7) { cell.value = totalItems; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
-    else if (incluirGanancia && i === 9) { cell.value = totalCostoI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
-    else if (incluirGanancia && i === 10) { cell.value = totalGananciaI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    const col = i + 1;
+    if (col === colI('totalItem') - 1) { cell.value = 'TOTAL'; styleTotalCell(cell); }
+    else if (col === colI('totalItem')) { cell.value = totalItems; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && col === colI('costo')) { cell.value = totalCostoI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
+    else if (incluirGanancia && col === colI('ganancia')) { cell.value = totalGananciaI; cell.numFmt = '#,##0.00'; styleTotalCell(cell); }
     else styleTotalCell(cell);
   });
 

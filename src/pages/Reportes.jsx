@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import "../styles/Reportes.css";
 import { getProductsByInventory, getClientes, getSales } from '../api/api';
-import { exportarInventarioExcel, exportarClientesExcel, exportarVentasExcel, downloadJson } from '../tools/exportExcel';
+import { exportarInventarioExcel, exportarInventarioGeneralExcel, exportarClientesExcel, exportarVentasExcel, downloadJson } from '../tools/exportExcel';
 import { BranchContext } from '../context/BranchContext';
 import { useAuth } from '../context/AuthContext';
 import Alert from '@mui/material/Alert';
@@ -12,12 +12,15 @@ const NOMBRES_MES = [
 ];
 
 const Reportes = () => {
-  const { selectedBranch } = useContext(BranchContext);
+  const { selectedBranch, branches } = useContext(BranchContext);
   const { user } = useAuth();
   // Los costos y la ganancia son solo para el administrador
   const esAdmin = user?.rol === "ADMIN";
   const [loading, setLoading] = useState("");
   const [alertMsg, setAlertMsg] = useState({ type: "", text: "" });
+  const [modalInventario, setModalInventario] = useState(false);
+  const [alcanceInventario, setAlcanceInventario] = useState("sucursal");
+  const [sucursalInventario, setSucursalInventario] = useState("");
   const [modalVentas, setModalVentas] = useState(false);
   const [periodoVentas, setPeriodoVentas] = useState("todo");
   const [ventasCache, setVentasCache] = useState([]);
@@ -45,11 +48,42 @@ const Reportes = () => {
 
   const sucursal = selectedBranch?.nombreInventario;
 
-  const handleExcelInventario = () =>
+  const abrirModalInventario = () => {
+    if (!branches || branches.length === 0) {
+      notify("error", "No hay sucursales disponibles.");
+      return;
+    }
+    setAlcanceInventario("sucursal");
+    setSucursalInventario(String(selectedBranch?.codigoInventario ?? branches[0].codigoInventario));
+    setModalInventario(true);
+  };
+
+  const confirmarExcelInventario = () => {
+    const todas = alcanceInventario === "todas";
+    const codigoElegido = Number(sucursalInventario);
+    setModalInventario(false);
+
     withLoading("excel-inv", async () => {
-      const data = await getProductsByInventory(selectedBranch?.codigoInventario);
-      await exportarInventarioExcel(data, sucursal);
+      if (!todas) {
+        const elegida = branches.find((b) => b.codigoInventario === codigoElegido);
+        if (!elegida) {
+          throw new Error("La sucursal seleccionada ya no esta disponible.");
+        }
+        const data = await getProductsByInventory(elegida.codigoInventario);
+        await exportarInventarioExcel(data, elegida.nombreInventario);
+        return;
+      }
+
+      // Una hoja por sucursal, en el mismo orden en que se listan en la app.
+      const hojas = await Promise.all(
+        branches.map(async (b) => ({
+          nombreSucursal: b.nombreInventario,
+          productos: await getProductsByInventory(b.codigoInventario),
+        }))
+      );
+      await exportarInventarioGeneralExcel(hojas);
     });
+  };
 
   const handleExcelClientes = () =>
     withLoading("excel-cli", async () => {
@@ -170,7 +204,7 @@ const Reportes = () => {
 
       <div className='panel-buttoms'>
         <h3>Excel</h3>
-        {btn("excel-inv", "Exportar Inventario Excel", handleExcelInventario, "btn-success")}
+        {btn("excel-inv", "Exportar Inventario Excel", abrirModalInventario, "btn-success")}
         {btn("excel-ven", "Exportar Ventas Excel",     abrirModalVentas,      "btn-success")}
         {btn("excel-cli", "Exportar Clientes Excel",   handleExcelClientes,   "btn-success")}
       </div>
@@ -181,6 +215,78 @@ const Reportes = () => {
         {btn("json-ven", "Exportar Ventas JSON",     handleJsonVentas)}
         {btn("json-cli", "Exportar Clientes JSON",   handleJsonClientes)}
       </div>
+
+      {modalInventario && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', zIndex: 1000
+          }}
+        >
+          <div
+            style={{
+              background: '#fff', padding: 30, borderRadius: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)', minWidth: 360
+            }}
+          >
+            <h3>Exportar Inventario</h3>
+            <p style={{ marginTop: 15, marginBottom: 15 }}>
+              &iquest;Qu&eacute; sucursales quieres incluir en el reporte?
+            </p>
+
+            <label style={{ display: 'block', marginBottom: 8, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name="alcanceInventario"
+                checked={alcanceInventario === "sucursal"}
+                onChange={() => setAlcanceInventario("sucursal")}
+                style={{ marginRight: 8 }}
+              />
+              Una sucursal
+            </label>
+
+            {alcanceInventario === "sucursal" && (
+              <select
+                className="form-select"
+                value={sucursalInventario}
+                onChange={(e) => setSucursalInventario(e.target.value)}
+                style={{ marginBottom: 12 }}
+              >
+                {branches.map((b) => (
+                  <option key={b.codigoInventario} value={b.codigoInventario}>
+                    {b.nombreInventario}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <label style={{ display: 'block', marginBottom: 12, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name="alcanceInventario"
+                checked={alcanceInventario === "todas"}
+                onChange={() => setAlcanceInventario("todas")}
+                style={{ marginRight: 8 }}
+              />
+              Todas las sucursales
+            </label>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+              <button className="btn btn-secondary" onClick={() => setModalInventario(false)}>
+                Cancelar
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={confirmarExcelInventario}
+                disabled={alcanceInventario === "sucursal" && !sucursalInventario}
+              >
+                Exportar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {modalVentas && (
         <div

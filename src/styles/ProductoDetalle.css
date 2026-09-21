@@ -36,6 +36,26 @@
     width: 75%;
 }
 
+/* La existencia no usa .code-campo: ahi el space-between con el input al 75%
+   abre un hueco grande en escritorio, y en pantallas angostas deja el boton
+   pegado al campo sin separacion. Aqui el input toma el ancho que sobra y el
+   boton queda junto a el, a la misma distancia en cualquier ancho. */
+.existencia-campo{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.existencia-campo input{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.existencia-campo .btn{
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
 .producto-imagen-container {
     margin-top: 30px;
     padding: 20px;
@@ -62,4 +82,46 @@
     object-fit: contain;
     border-radius: 8px;
     background-color: #fff;
+}
+.producto-modal-box {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 400px !important;
+    max-width: 90vw !important;
+    background-color: #fff !important;
+    border-radius: 16px !important;
+    box-shadow: 0px 8px 24px #00000022 !important;
+    padding: 32px !important;
+}
+
+.producto-modal-info {
+    margin-bottom: 12px;
+}
+
+.producto-info-blue {
+    color: #1976d2;
+}
+
+.producto-modal-mensaje {
+    display: block;
+    font-size: small;
+    min-height: 20px;
+    margin-top: 4px;
+}
+
+.producto-modal-mensaje.error {
+    color: #de1800;
+}
+
+.producto-modal-mensaje.preview {
+    color: #2e7d32;
+}
+
+.producto-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
 }
