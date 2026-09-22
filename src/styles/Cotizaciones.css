@@ -1,0 +1,144 @@
+/* Filtros de estado. Al entrar al módulo el activo es "Pendientes". */
+.cotizacion-filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Los filtros se comportan igual que "Todas" (btn-outline-primary cuando no
+   esta puesto, btn-primary cuando si), solo que cada uno con su color en vez
+   del azul.
+
+   Los selectores van como .btn.cotizacion-filtro-* y no solo .cotizacion-filtro-*
+   a proposito. Con una sola clase empatan en especificidad con el .btn de
+   Bootstrap, y el desempate lo gana el que va despues en el bundle: Vite deja
+   este archivo antes que bootstrap.min.css, asi que .btn reescribia
+   --bs-btn-color y --bs-btn-bg a transparente y los botones salian sin color.
+   Dos clases (0,2,0) le ganan a una (0,1,0) sin depender del orden.
+
+   La paleta de cada estado se declara una vez aqui y las dos reglas de abajo
+   la mapean a las variables de Bootstrap. Se usan las variables --bs-btn-* y
+   no las propiedades sueltas porque .btn:hover y .btn:active las leen: fijando
+   solo background-color, el boton volvia al azul en cuanto pasabas el mouse. */
+.btn.cotizacion-filtro-pendiente,
+.btn.cotizacion-filtro-pendiente-outline {
+    --cot-color: #ffc107;
+    --cot-oscuro: #e0a800;
+    --cot-mas-oscuro: #d39e00;
+    /* Texto oscuro sobre el relleno: el blanco sobre #ffc107 no se lee. */
+    --cot-texto: #212529;
+    --bs-btn-focus-shadow-rgb: 255, 193, 7;
+}
+
+.btn.cotizacion-filtro-vendida,
+.btn.cotizacion-filtro-vendida-outline {
+    --cot-color: #388e3c;
+    --cot-oscuro: #2e7d32;
+    --cot-mas-oscuro: #2b722f;
+    --cot-texto: #fff;
+    --bs-btn-focus-shadow-rgb: 56, 142, 60;
+}
+
+.btn.cotizacion-filtro-eliminada,
+.btn.cotizacion-filtro-eliminada-outline {
+    --cot-color: #dc3545;
+    --cot-oscuro: #bb2d3b;
+    --cot-mas-oscuro: #b02a37;
+    --cot-texto: #fff;
+    --bs-btn-focus-shadow-rgb: 220, 53, 69;
+}
+
+/* Seleccionado: relleno solido, y al pasar el mouse un tono mas oscuro.
+   Equivale a btn-primary con el color del estado. */
+.btn.cotizacion-filtro-pendiente,
+.btn.cotizacion-filtro-vendida,
+.btn.cotizacion-filtro-eliminada {
+    --bs-btn-color: var(--cot-texto);
+    --bs-btn-bg: var(--cot-color);
+    --bs-btn-border-color: var(--cot-color);
+    --bs-btn-hover-color: var(--cot-texto);
+    --bs-btn-hover-bg: var(--cot-oscuro);
+    --bs-btn-hover-border-color: var(--cot-mas-oscuro);
+    --bs-btn-active-color: var(--cot-texto);
+    --bs-btn-active-bg: var(--cot-mas-oscuro);
+    --bs-btn-active-border-color: var(--cot-mas-oscuro);
+}
+
+/* Deseleccionado: borde y texto del color, fondo transparente heredado de
+   .btn, y al pasar el mouse se rellena. Equivale a btn-outline-primary con el
+   color del estado. */
+.btn.cotizacion-filtro-pendiente-outline,
+.btn.cotizacion-filtro-vendida-outline,
+.btn.cotizacion-filtro-eliminada-outline {
+    --bs-btn-color: var(--cot-color);
+    --bs-btn-border-color: var(--cot-color);
+    --bs-btn-hover-color: var(--cot-texto);
+    --bs-btn-hover-bg: var(--cot-color);
+    --bs-btn-hover-border-color: var(--cot-color);
+    --bs-btn-active-color: var(--cot-texto);
+    --bs-btn-active-bg: var(--cot-color);
+    --bs-btn-active-border-color: var(--cot-color);
+}
+
+/* Etiqueta de estado junto al número de cotización */
+.cotizacion-estado {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.cotizacion-estado-pendiente {
+    background-color: #fff3cd;
+    color: #8a6d3b;
+}
+
+.cotizacion-estado-vendida {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.cotizacion-estado-eliminada {
+    background-color: #e2e3e5;
+    color: #52585d;
+}
+
+/* Existencia que no alcanza para convertir la línea en venta */
+.cotizacion-sin-stock {
+    color: #de1800;
+    font-weight: 600;
+}
+
+.cotizacion-aviso-stock {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+/* El precio se movió desde que se cotizó: se cobra el cotizado, no este */
+.cotizacion-precio-cambiado {
+    color: #b26a00;
+    font-weight: 600;
+}
+
+.cotizacion-nota-faltantes {
+    color: #8a6d3b;
+    background-color: #fff3cd;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    text-align: left;
+}
+
+.cotizacion-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}

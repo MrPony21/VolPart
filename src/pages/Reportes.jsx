@@ -210,10 +210,10 @@ const Reportes = () => {
       </div>
 
       <div className='panel-buttoms' style={{ marginTop: "40px" }}>
-        <h3>JSON</h3>
-        {btn("json-inv", "Exportar Inventario JSON", handleJsonInventario)}
-        {btn("json-ven", "Exportar Ventas JSON",     handleJsonVentas)}
-        {btn("json-cli", "Exportar Clientes JSON",   handleJsonClientes)}
+        <h3>BACKUP</h3>
+        {btn("json-inv", "Exportar Inventario", handleJsonInventario)}
+        {btn("json-ven", "Exportar Ventas",     handleJsonVentas)}
+        {btn("json-cli", "Exportar Clientes",   handleJsonClientes)}
       </div>
 
       {modalInventario && (

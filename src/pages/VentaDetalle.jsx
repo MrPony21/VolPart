@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 import { getSale } from '../api/api';
+import { generarFacturaPDF } from '../tools/generarFactura';
 import { useAuth } from '../context/AuthContext';
 import {
   costoItem,
@@ -48,6 +49,7 @@ const VentaDetalle = () => {
   const [venta, setVenta] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [generando, setGenerando] = useState(false);
 
   useEffect(() => {
     if (!codigoVenta) {
@@ -77,6 +79,43 @@ const VentaDetalle = () => {
   const costo = venta ? totalCostoVenta(venta) : 0;
   const ganancia = venta ? gananciaVenta(venta) : 0;
   const margen = margenPorcentaje(ganancia, vendido);
+
+  // Reimprime el comprobante de esta venta, ya sea porque se perdio el
+  // original o porque nunca se genero (p. ej. una venta que llego por la
+  // conversion de una cotizacion). Usa el mismo generador que el punto de
+  // venta; solo cambia de donde salen los datos: aqui vienen de la venta ya
+  // guardada, no de la lista que se arma en pantalla al cobrar.
+  const descargarComprobante = () => {
+    if (!venta) return;
+
+    setGenerando(true);
+    try {
+      const clienteParaPdf = venta.cliente
+        ? {
+            nit: venta.cliente.nit,
+            nombre: venta.cliente.nombreCliente,
+            telefono: venta.cliente.telefono,
+            direccion: venta.cliente.direccion,
+          }
+        : {};
+
+      generarFacturaPDF({
+        numeroSerie: venta.numeroSerie,
+        codigoVenta: venta.codigoVenta,
+        cliente: clienteParaPdf,
+        items: (venta.items ?? []).map((item) => ({
+          codigoproducto: item.inventarioProducto?.producto?.codigoProducto ?? item.codigoInventarioProducto,
+          nombreproducto: item.inventarioProducto?.producto?.nombreProducto ?? '-',
+          precio: item.precioVenta,
+          cantidadVenta: item.cantidad,
+        })),
+        total: venta.total,
+        nombreSucursal: venta.inventario?.nombreInventario,
+      });
+    } finally {
+      setGenerando(false);
+    }
+  };
 
   return (
     <div className="sales-container">
@@ -257,6 +296,21 @@ const VentaDetalle = () => {
 
           <div className="sales-total" style={{ marginTop: 16 }}>
             TOTAL: {quetzales(venta.total)}
+          </div>
+
+          <div className="sales-action">
+            <button
+              className="btn btn-success sales-btn-action"
+              onClick={descargarComprobante}
+              disabled={generando}
+            >
+              {generando ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Generando...
+                </>
+              ) : "Descargar comprobante"}
+            </button>
           </div>
         </div>
       )}

@@ -220,6 +220,63 @@ export async function getSale(codigoVenta) {
 }
 
 
+// Funciones de Cotizaciones
+export async function createCotizacion(cotizacion) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(cotizacion),
+  });
+  return handleResponse(response);
+}
+
+/** Cotizaciones de una sucursal. Sin estado devuelve todas. */
+export async function getCotizaciones(codigoInventario, estado) {
+  const params = new URLSearchParams({ codigoInventario });
+  if (estado) params.append("estado", estado);
+
+  const response = await fetch(`${API_BASE_URL}/cotizacion?${params}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+export async function getCotizacion(codigoCotizacion) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion/${codigoCotizacion}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+/** Convierte la cotizacion en venta. El API valida existencia y estado. */
+export async function convertirCotizacionEnVenta(codigoCotizacion) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion/${codigoCotizacion}/venta`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+/** Baja logica: la cotizacion pasa a ELIMINADA, la fila se conserva. */
+export async function eliminarCotizacion(codigoCotizacion) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion/${codigoCotizacion}/eliminar`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+/** Recalcula cada linea de la cotizacion al precio vigente y actualiza el total. */
+export async function actualizarPreciosCotizacion(codigoCotizacion) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion/${codigoCotizacion}/actualizar-precios`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
 /** Importa un array de ventas (incluso vacío) */
 export async function importVentas(ventas) {
   const response = await fetch(`${API_BASE_URL}/ventas/import`, {

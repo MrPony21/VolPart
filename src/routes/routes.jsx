@@ -8,6 +8,9 @@ import Ventas from "../pages/Ventas";
 import Clientes from "../pages/Clientes";
 import Sales from "../pages/Sales";
 import VentaDetalle from "../pages/VentaDetalle";
+import Cotizaciones from "../pages/Cotizaciones";
+import CrearCotizacion from "../pages/CrearCotizacion";
+import CotizacionDetalle from "../pages/CotizacionDetalle";
 import CrearSucursal from "../pages/CrearSucursal";
 import Login from "../pages/login";
 import Usuarios from "../pages/Usuarios";
@@ -45,6 +48,9 @@ const AppRouter = () => {
       )}
       <Route path="/Sales"           element={<ProtectedRoute><Sales /></ProtectedRoute>} />
       <Route path="/VentaDetalle"    element={<ProtectedRoute><VentaDetalle /></ProtectedRoute>} />
+      <Route path="/Cotizaciones"      element={<ProtectedRoute><Cotizaciones /></ProtectedRoute>} />
+      <Route path="/CrearCotizacion"   element={<ProtectedRoute><CrearCotizacion /></ProtectedRoute>} />
+      <Route path="/CotizacionDetalle" element={<ProtectedRoute><CotizacionDetalle /></ProtectedRoute>} />
       <Route path="/CrearSucursal"   element={<ProtectedRoute><CrearSucursal /></ProtectedRoute>} />
       <Route path="/Usuarios"        element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
       <Route path="/CrearUsuario"    element={<ProtectedRoute><RegistrarUsuarios /></ProtectedRoute>} />

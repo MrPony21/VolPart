@@ -18,6 +18,7 @@ import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import PeopleIcon from '@mui/icons-material/People';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import Modal from "react-bootstrap/Modal";
 import "../styles/ProductoNoEncontrado.css";
 import { useAuth } from "../context/AuthContext"; 
@@ -32,6 +33,7 @@ const iconMap = {
   DescriptionIcon: <DescriptionIcon />,
   ReceiptIcon:     <ReceiptIcon />,
   PeopleIcon:      <PeopleIcon />,
+  RequestQuoteIcon: <RequestQuoteIcon />,
 };
 
 export function Sidebar({ sidebarOpen, setSidebarOpen, isMobile }) {
