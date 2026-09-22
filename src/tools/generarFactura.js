@@ -13,12 +13,14 @@ import { generarDocumentoPDF, C } from './documentoPdf';
  * @param {Array}  params.items        - ventasList: [{ codigoproducto, nombreproducto, precio, cantidadVenta }]
  * @param {number} params.total        - Total calculado
  * @param {string} params.nombreSucursal
+ * @param {string} [params.observacion] - Nota corta, ej. de donde salio la
+ *   venta. La factura normal del punto de venta no la manda.
  */
-export function generarFacturaPDF({ numeroSerie, codigoVenta, cliente, items, total, nombreSucursal }) {
+export function generarFacturaPDF({ numeroSerie, codigoVenta, cliente, items, total, nombreSucursal, observacion }) {
   const serie = numeroSerie ?? `#${codigoVenta ?? Date.now()}`;
 
   generarDocumentoPDF({
-    titulo: 'FACTURA DE VENTA',
+    titulo: 'COMPROBANTE DE VENTA',
     etiquetaSerie: 'N° Serie',
     serie,
     cliente,
@@ -32,6 +34,7 @@ export function generarFacturaPDF({ numeroSerie, codigoVenta, cliente, items, to
     nombreSucursal,
     colorTotal: C.green,
     leyendaPie: 'Gracias por su compra  •  VolPart',
-    nombreArchivo: `factura-${serie}.pdf`,
+    observacion,
+    nombreArchivo: `COMPROBANTE-${serie}.pdf`,
   });
 }

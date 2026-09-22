@@ -277,6 +277,16 @@ export async function actualizarPreciosCotizacion(codigoCotizacion) {
   return handleResponse(response);
 }
 
+/** Asigna un cliente a una cotizacion que se registro sin uno. */
+export async function asignarClienteCotizacion(codigoCotizacion, codigoCliente) {
+  const response = await fetch(`${API_BASE_URL}/cotizacion/${codigoCotizacion}/cliente`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ codigoCliente }),
+  });
+  return handleResponse(response);
+}
+
 /** Importa un array de ventas (incluso vacío) */
 export async function importVentas(ventas) {
   const response = await fetch(`${API_BASE_URL}/ventas/import`, {

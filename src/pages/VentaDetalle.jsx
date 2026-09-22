@@ -111,6 +111,9 @@ const VentaDetalle = () => {
         })),
         total: venta.total,
         nombreSucursal: venta.inventario?.nombreInventario,
+        observacion: venta.cotizacionOrigen
+          ? `Generado a partir de la cotización ${venta.cotizacionOrigen.numeroSerie}`
+          : undefined,
       });
     } finally {
       setGenerando(false);
@@ -151,6 +154,20 @@ const VentaDetalle = () => {
               </span>
             </div>
           </div>
+
+          {venta.cotizacionOrigen && (
+            <div className="sales-client-row">
+              <div className="sales-client-input-group">
+                <strong>Originada de cotización:</strong>{" "}
+                <button
+                  className="btn btn-link btn-sm p-0"
+                  onClick={() => navigate(`/CotizacionDetalle?codigoCotizacion=${venta.cotizacionOrigen.codigoCotizacion}`)}
+                >
+                  {venta.cotizacionOrigen.numeroSerie}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Cliente */}
           <div className="sales-section">

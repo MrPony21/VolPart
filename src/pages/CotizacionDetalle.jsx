@@ -5,8 +5,12 @@ import {
   convertirCotizacionEnVenta,
   eliminarCotizacion,
   actualizarPreciosCotizacion,
+  asignarClienteCotizacion,
+  getClientes,
+  createCliente,
 } from '../api/api';
 import { generarCotizacionPDF } from '../tools/generarCotizacion';
+import { generarFacturaPDF } from '../tools/generarFactura';
 import { formatFecha, quetzales } from '../tools/ventas';
 import { ETIQUETA_ESTADO } from './Cotizaciones';
 import Alert from '@mui/material/Alert';
@@ -29,6 +33,14 @@ const CotizacionDetalle = () => {
   const [procesando, setProcesando] = useState(false);
   const [modalConfirmar, setModalConfirmar] = useState(null); // 'venta' | 'eliminar' | 'actualizarPrecios' | null
 
+  // Alta de cliente cuando la cotizacion se registro sin uno. Es opcional:
+  // no bloquea nada mas en la pantalla mientras no se toque.
+  const [clientes, setClientes] = useState([]);
+  const [clientesCargados, setClientesCargados] = useState(false);
+  const [formCliente, setFormCliente] = useState({ codigoCliente: 0, nit: '', nombre: '', telefono: '', direccion: '' });
+  const [clienteEncontrado, setClienteEncontrado] = useState(false);
+  const [vinculandoCliente, setVinculandoCliente] = useState(false);
+
   const cargar = async () => {
     if (!codigoCotizacion) return;
     try {
@@ -50,6 +62,18 @@ const CotizacionDetalle = () => {
 
   const items = cotizacion?.items ?? [];
   const esPendiente = cotizacion?.estado === "PENDIENTE";
+
+  // La lista de clientes solo hace falta para detectar un NIT ya registrado,
+  // asi que se carga una vez y solo cuando de verdad se va a usar: una
+  // cotizacion ya con cliente, vendida o eliminada nunca la necesita.
+  useEffect(() => {
+    const necesitaClientes = esPendiente && cotizacion && !cotizacion.cliente;
+    if (!necesitaClientes || clientesCargados) return;
+
+    getClientes()
+      .then(data => { setClientes(data); setClientesCargados(true); })
+      .catch(err => console.error("Error al obtener clientes:", err));
+  }, [cotizacion, esPendiente, clientesCargados]);
 
   // Existencia de hoy contra lo cotizado: es lo que decide si la conversion
   // va a pasar o la va a rechazar el API.
@@ -102,6 +126,37 @@ const CotizacionDetalle = () => {
 
   const descargarPdf = () => construirPdfCotizacion(cotizacion);
 
+  // El comprobante de la venta convertida sale de dos fuentes: la cotizacion
+  // recien releida trae cliente y producto completos (el "venta" que devuelve
+  // la conversion no viene con esas relaciones cargadas), y la venta trae el
+  // numero de serie AP- y el codigo real. El precio de cada linea es el
+  // cotizado: es exactamente el que la conversion cobro, no el de lista.
+  const construirFacturaDesdeConversion = (cotizacionData, ventaData) => {
+    const clienteParaPdf = cotizacionData.cliente
+      ? {
+          nit: cotizacionData.cliente.nit,
+          nombre: cotizacionData.cliente.nombreCliente,
+          telefono: cotizacionData.cliente.telefono,
+          direccion: cotizacionData.cliente.direccion,
+        }
+      : {};
+
+    generarFacturaPDF({
+      numeroSerie: ventaData?.numeroSerie,
+      codigoVenta: ventaData?.codigoVenta,
+      cliente: clienteParaPdf,
+      items: (cotizacionData.items ?? []).map(item => ({
+        codigoproducto: item.inventarioProducto?.producto?.codigoProducto ?? item.codigoInventarioProducto,
+        nombreproducto: item.inventarioProducto?.producto?.nombreProducto ?? '-',
+        precio: item.precioCotizado,
+        cantidadVenta: item.cantidad,
+      })),
+      total: ventaData?.total ?? cotizacionData.total,
+      nombreSucursal: cotizacionData.inventario?.nombreInventario,
+      observacion: `Generado a partir de la cotización ${cotizacionData.numeroSerie}`,
+    });
+  };
+
   const realizarVenta = async () => {
     setModalConfirmar(null);
     setProcesando(true);
@@ -110,7 +165,8 @@ const CotizacionDetalle = () => {
       const resultado = await convertirCotizacionEnVenta(cotizacion.codigoCotizacion);
       setCotizacion(resultado.cotizacion);
       setError("");
-      setAviso(`Venta ${resultado.venta?.numeroSerie} registrada a partir de esta cotización.`);
+      setAviso(`Venta ${resultado.venta?.numeroSerie} registrada a partir de esta cotización. Descargando el comprobante...`);
+      construirFacturaDesdeConversion(resultado.cotizacion, resultado.venta);
     } catch (err) {
       console.error("Error al convertir la cotizacion:", err);
       // El API rechaza por existencia o por estado; el mensaje ya viene claro.
@@ -137,6 +193,84 @@ const CotizacionDetalle = () => {
       setError(err.message || "No se pudo eliminar la cotización.");
     } finally {
       setProcesando(false);
+    }
+  };
+
+  // Igual que en el punto de venta: escribir el NIT detecta si ya existe un
+  // cliente con ese numero y precarga sus datos (bloqueando los campos, para
+  // no editarlo de paso). Si no existe, quedan libres para darlo de alta.
+  const handleFormClienteChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'nit') {
+      const nitIngresado = value.trim();
+      const encontrado = clientes.find(c => c.nit === nitIngresado);
+
+      if (encontrado) {
+        setFormCliente({
+          codigoCliente: encontrado.codigoCliente ?? 0,
+          nit: encontrado.nit,
+          nombre: encontrado.nombreCliente,
+          telefono: encontrado.telefono,
+          direccion: encontrado.direccion,
+        });
+        setClienteEncontrado(true);
+      } else {
+        setFormCliente(prev => ({
+          ...prev,
+          codigoCliente: 0,
+          nit: nitIngresado,
+          nombre: '',
+          telefono: '',
+          direccion: '',
+        }));
+        setClienteEncontrado(false);
+      }
+    } else {
+      setFormCliente(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const datosClienteFormCompletos =
+    formCliente.nit.trim() !== '' &&
+    formCliente.nombre.trim() !== '' &&
+    formCliente.telefono.trim() !== '' &&
+    formCliente.direccion.trim() !== '';
+
+  // Vincula un cliente a una cotizacion que se registro sin uno. Si el NIT
+  // coincidio con un cliente existente, se vincula directo; si no, primero
+  // se registra -igual que en el punto de venta- y despues se vincula con
+  // el codigo nuevo. Es opcional: la cotizacion funciona igual sin esto.
+  const vincularCliente = async () => {
+    if (!datosClienteFormCompletos) return;
+
+    setVinculandoCliente(true);
+    setAviso("");
+    try {
+      let codigoCliente = formCliente.codigoCliente;
+
+      if (!codigoCliente) {
+        const respuesta = await createCliente({
+          nombreCliente: formCliente.nombre.trim(),
+          nit: formCliente.nit.trim(),
+          telefono: formCliente.telefono.trim(),
+          direccion: formCliente.direccion.trim(),
+        });
+        const nuevoCliente = respuesta?.clienteSave ?? respuesta;
+        codigoCliente = nuevoCliente.codigoCliente;
+      }
+
+      const actualizada = await asignarClienteCotizacion(cotizacion.codigoCotizacion, codigoCliente);
+      setCotizacion(actualizada);
+      setError("");
+      setAviso(`Cliente ${actualizada.cliente?.nombreCliente ?? ""} vinculado a la cotización.`);
+      setFormCliente({ codigoCliente: 0, nit: '', nombre: '', telefono: '', direccion: '' });
+      setClienteEncontrado(false);
+    } catch (err) {
+      console.error("Error al vincular el cliente a la cotizacion:", err);
+      setError(err.message || "No se pudo vincular el cliente.");
+    } finally {
+      setVinculandoCliente(false);
     }
   };
 
@@ -267,10 +401,87 @@ const CotizacionDetalle = () => {
             </div>
           </div>
         ) : (
-          <div className="sales-client-row">
-            <div className="sales-client-input-group" style={{ color: "#888" }}>
-              Sin cliente registrado
+          <div className="sales-section">
+            <div className="sales-client-row">
+              <div className="sales-client-input-group" style={{ color: "#888" }}>
+                Sin cliente registrado
+              </div>
             </div>
+
+            {esPendiente && (
+              <div style={{ marginTop: 10 }}>
+                <div className="sales-client-row">
+                  <div className="sales-client-input-group">
+                    <label style={{ fontWeight: 700, display: "block", marginBottom: 4 }}>NIT</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="nit"
+                      placeholder="NIT del cliente"
+                      value={formCliente.nit}
+                      onChange={handleFormClienteChange}
+                    />
+                  </div>
+                  <div className="sales-client-input-group">
+                    <label style={{ fontWeight: 700, display: "block", marginBottom: 4 }}>Nombre</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="nombre"
+                      placeholder="Nombre"
+                      value={formCliente.nombre}
+                      onChange={handleFormClienteChange}
+                      disabled={clienteEncontrado}
+                    />
+                  </div>
+                </div>
+                <div className="sales-client-row">
+                  <div className="sales-client-input-group">
+                    <label style={{ fontWeight: 700, display: "block", marginBottom: 4 }}>Teléfono</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="telefono"
+                      placeholder="Teléfono"
+                      value={formCliente.telefono}
+                      onChange={handleFormClienteChange}
+                      disabled={clienteEncontrado}
+                    />
+                  </div>
+                  <div className="sales-client-input-group">
+                    <label style={{ fontWeight: 700, display: "block", marginBottom: 4 }}>Dirección</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="direccion"
+                      placeholder="Dirección"
+                      value={formCliente.direccion}
+                      onChange={handleFormClienteChange}
+                      disabled={clienteEncontrado}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                  {clienteEncontrado && (
+                    <span style={{ color: "#888", fontSize: 13 }}>
+                      Cliente existente encontrado por NIT.
+                    </span>
+                  )}
+                  <button
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={vincularCliente}
+                    disabled={!datosClienteFormCompletos || vinculandoCliente}
+                  >
+                    {vinculandoCliente ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Vinculando...
+                      </>
+                    ) : clienteEncontrado ? "Vincular cliente" : "Registrar cliente"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

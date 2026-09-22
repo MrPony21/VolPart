@@ -53,6 +53,9 @@ function headerRect(doc, x, y, w, h, fillColor) {
  * @param {string} params.nombreSucursal
  * @param {Array}  [params.colorTotal]  - Color del recuadro del total
  * @param {string} [params.leyendaPie]  - Texto del pie
+ * @param {string} [params.observacion] - Nota corta entre los datos del
+ *   cliente y la tabla, ej. de donde salio el documento. Omitirla no deja
+ *   hueco: el layout de quien no la usa queda exactamente igual.
  * @param {string} params.nombreArchivo - Nombre del PDF a descargar
  */
 export function generarDocumentoPDF({
@@ -65,6 +68,7 @@ export function generarDocumentoPDF({
   nombreSucursal,
   colorTotal = C.green,
   leyendaPie = 'VolPart',
+  observacion,
   nombreArchivo,
 }) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -137,6 +141,31 @@ export function generarDocumentoPDF({
   labelVal('Teléfono:',  cliente?.telefono,   col1x, y + 15);
   labelVal('Dirección:', cliente?.direccion,  col2x, y + 15);
   y += 28;
+
+  // ── 2.5 OBSERVACIÓN (opcional) ────────────────────────────────────────────
+  if (observacion) {
+    setFill(doc, C.lightGray);
+    doc.rect(M, y, CW, 9, 'F');
+    setStroke(doc, C.midGray);
+    doc.setLineWidth(0.3);
+    doc.rect(M, y, CW, 9);
+
+    // getTextWidth no mide bien un espacio final dentro del string medido
+    // (es un problema conocido de jsPDF con el ancho de glifos en blanco), asi
+    // que el espacio va explicito en mm despues de medir la etiqueta sin el
+    // -igual que labelVal, un poco mas arriba, ya lo resuelve.
+    const etiquetaObs = 'Observación:';
+    setTxt(doc, C.darkBlue);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text(etiquetaObs, M + 4, y + 6);
+
+    setTxt(doc, C.darkGray);
+    doc.setFont('helvetica', 'normal');
+    doc.text(observacion, M + 4 + doc.getTextWidth(etiquetaObs) + 2, y + 6);
+
+    y += 13;
+  }
 
   // ── 3. TABLA DE PRODUCTOS ─────────────────────────────────────────────────
 
