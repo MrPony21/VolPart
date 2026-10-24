@@ -37,17 +37,30 @@ const CargarArchivo = () => {
     }
   };
 
+  // Primer valor que de verdad trae dato, para aceptar los dos formatos de
+  // archivo sin repetir el ?? en cada campo.
+  const primerDato = (...valores) =>
+    valores.find(valor => valor !== undefined && valor !== null && valor !== '');
+
   const transformProductData = (productos, branchId) => {
-    return productos.map(product => ({
-      nombreProducto: product.nombre || '',
-      upc: product.codigo || '',
-      marca: product.marca || '',
-      urlFoto: product.imagen || '',
-      codigoInventario: parseInt(branchId),
-      existencia: parseInt(product.cantidad) || 0,
-      precio: parseFloat(product.precio) || 0,
-      precioCompra: parseFloat(product.precioCompra ?? product.costo) || 0
-    }));
+    return productos.map(product => {
+      const precioCompra = primerDato(
+        product.preciocompra,
+        product.precioCompra,
+        product.costo
+      );
+
+      return {
+        nombreProducto: primerDato(product.nombreproducto, product.nombre),
+        upc: primerDato(product.upc, product.codigo),
+        marca: primerDato(product.marca) ?? null,
+        urlFoto: primerDato(product.urlfoto, product.urlFoto, product.imagen) ?? null,
+        codigoInventario: parseInt(branchId),
+        existencia: Number(primerDato(product.existencia, product.cantidad)),
+        precio: Number(primerDato(product.precio)),
+        ...(precioCompra !== undefined ? { precioCompra: Number(precioCompra) } : {})
+      };
+    });
   };
 
   const transformClienteData = (clientes) => {
