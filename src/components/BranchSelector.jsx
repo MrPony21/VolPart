@@ -49,6 +49,9 @@ export function BranchSelector({ mostrarBotonMenu = false, onOpenMenu }) {
             <Label>Usuario:</Label>
             <Value>{user || "Usuario"}</Value>
           </UserInfo>
+          {import.meta.env.VITE_ENTORNO === "develop" && (
+            <span className="badge bg-warning text-dark" style={{"fontSize": "15px"}}>Entorno de pruebas</span>
+          )}
         </LeftSection>
 
         <RightSection>
