@@ -211,7 +211,7 @@ const VentaDetalle = () => {
 
           {esAdmin && tieneItemSinCosto(venta) && (
             <Alert severity="warning" style={{ marginTop: 16 }}>
-              Esta venta tiene productos sin precio de compra registrado. Esos
+              Esta venta tiene productos sin precio costo registrado. Esos
               productos suman <strong>0</strong> de ganancia, no el precio de
               venta completo, para no reportar una utilidad que no fue real.
               Por eso <em>Vendido − Costo</em> puede no dar exactamente la ganancia.
@@ -235,7 +235,7 @@ const VentaDetalle = () => {
                   <th>Subtotal</th>
                   {esAdmin && (
                     <>
-                      <th>P. Compra</th>
+                      <th>Precio Costo</th>
                       <th>Costo T</th>
                       <th>Ganancia</th>
                       <th>Margen</th>

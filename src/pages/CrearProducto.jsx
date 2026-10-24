@@ -65,11 +65,11 @@ const CrearProducto = () => {
         }
 
         if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
-            return "El precio debe ser un número mayor a cero.";
+            return "El precio de venta debe ser un número mayor a cero.";
         }
 
         if (isNaN(producto.precioCompra) || parseFloat(producto.precioCompra) < 0) {
-            return "El precio de compra debe ser un número mayor o igual a cero.";
+            return "El precio costo debe ser un número mayor o igual a cero.";
         }
 
         return null; // todo está bien
@@ -184,11 +184,11 @@ const CrearProducto = () => {
                     <input className='form-control mb-2' value={productoNuevo.existencia} name="existencia" onChange={onChangeInput}></input>
                 </div>
                 <div>
-                    <label>Precio:</label>
+                    <label>Precio Venta:</label>
                     <input className='form-control mb-2' value={productoNuevo.precio} name="precio" onChange={onChangeInput}></input>
                 </div>
                 <div>
-                    <label>Precio de compra:</label>
+                    <label>Precio Costo:</label>
                     <input className='form-control mb-2' value={productoNuevo.precioCompra} name="precioCompra" onChange={onChangeInput}></input>
                 </div>
             </div>

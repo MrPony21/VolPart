@@ -261,7 +261,7 @@ const Sales = () => {
                       <span
                         className="badge bg-warning text-dark"
                         style={{ marginRight: 12, fontWeight: 500, fontSize: 12 }}
-                        title="Esta venta tiene productos sin precio de compra registrado: esos productos no suman ganancia"
+                        title="Esta venta tiene productos sin precio costo registrado: esos productos no suman ganancia"
                       >
                         No tiene costo registrado
                       </span>

@@ -76,7 +76,7 @@ export default function CrearProductoModal({ show, onHide, onGuardar }) {
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Precio</Form.Label>
+            <Form.Label>Precio Venta</Form.Label>
             <Form.Control
               type="number"
               name="precio"

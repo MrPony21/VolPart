@@ -162,7 +162,7 @@ function construirHojaInventario(ws, productos, nombreSucursal) {
     { header: 'Nombre',     key: 'nombreproducto', width: 45 },
     { header: 'Marca',      key: 'marca',          width: 22 },
     { header: 'Existencia', key: 'existencia',     width: 13 },
-    { header: 'Precio (Q)', key: 'precio',         width: 14 },
+    { header: 'Precio Venta (Q)', key: 'precio',         width: 14 },
   ];
   ws.columns = cols;
 
@@ -417,7 +417,7 @@ export async function exportarVentasExcel(ventas, nombreSucursal, opciones = {})
   ];
   if (incluirGanancia) {
     colsI.push(
-      { header: 'P. Compra Unit. (Q)', key: 'precioCompra', width: 20 },
+      { header: 'Precio Costo Unit. (Q)', key: 'precioCompra', width: 20 },
       { header: 'Costo T (Q)',           key: 'costo',        width: 14 },
       { header: 'Ganancia (Q)',        key: 'ganancia',     width: 14 },
       { header: 'Observación',         key: 'observacion',  width: 48 },

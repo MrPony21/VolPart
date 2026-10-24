@@ -98,7 +98,7 @@ const ProductoDetalle = () => {
         }
 
         if (isNaN(producto.precio) || parseFloat(producto.precio) <= 0) {
-            return "El precio debe ser un número mayor a cero.";
+            return "El precio de venta debe ser un número mayor a cero.";
         }
 
         if (producto.preciocompra === "" || producto.preciocompra === null || producto.preciocompra === undefined) {
@@ -106,7 +106,7 @@ const ProductoDetalle = () => {
         }
 
         if (isNaN(producto.preciocompra) || parseFloat(producto.preciocompra) < 0) {
-            return "El precio de compra debe ser un número mayor o igual a cero.";
+            return "El precio costo debe ser un número mayor o igual a cero.";
         }
 
         return null;
@@ -459,7 +459,7 @@ const ProductoDetalle = () => {
                         </div>
                     </div>
                     <div>
-                        <label>Precio:</label>
+                        <label>Precio Venta:</label>
                         <input
                             className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.precio}
@@ -470,7 +470,7 @@ const ProductoDetalle = () => {
                         />
                     </div>
                     <div>
-                        <label>Precio de compra:</label>
+                        <label>Precio Costo:</label>
                         <input
                             className={`form-control mb-2 ${!modoEdicion ? "modoEdicionInput" : ""}`}
                             value={datos.preciocompra ?? ""}
@@ -544,8 +544,8 @@ const ProductoDetalle = () => {
                                 <th>Fecha</th>
                                 <th>Motivo</th>
                                 <th>Existencia</th>
-                                <th>Precio</th>
-                                <th>P. Compra</th>
+                                <th>Precio Venta</th>
+                                <th>Precio Costo</th>
                                 <th>Usuario</th>
                                 <th>Detalle</th>
                             </tr>
@@ -556,8 +556,8 @@ const ProductoDetalle = () => {
                                     <td data-label="Fecha:">{formatearFecha(m.fechaMovimiento)}</td>
                                     <td data-label="Motivo:">{m.tipoMovimiento}</td>
                                     <td data-label="Existencia:">{formatearCambio(m.existenciaAnterior, m.existenciaNueva, m.cantidadMovida)}</td>
-                                    <td data-label="Precio:">{formatearCambioPrecio(m.precioAnterior, m.precioNuevo)}</td>
-                                    <td data-label="P. Compra:">{formatearCambioPrecio(m.precioCompraAnterior, m.precioCompraNuevo)}</td>
+                                    <td data-label="Precio Venta:">{formatearCambioPrecio(m.precioAnterior, m.precioNuevo)}</td>
+                                    <td data-label="Precio Costo:">{formatearCambioPrecio(m.precioCompraAnterior, m.precioCompraNuevo)}</td>
                                     <td data-label="Usuario:">{m.nombreUsuario || "—"}</td>
                                     <td data-label="Detalle:">{m.numeroSerie ? `Venta ${m.numeroSerie}` : (m.observacion || "—")}</td>
                                 </tr>
